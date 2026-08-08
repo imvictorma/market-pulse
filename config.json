@@ -1,0 +1,92 @@
+{
+  "timezone": "Asia/Shanghai",
+  "history_years": 5,
+  "vxn_percentile_days": 756,
+  "tickers": {
+    "ndx": "^NDX",
+    "spx": "^GSPC",
+    "qqq": "QQQ",
+    "vxn": "^VXN",
+    "us10y": "^TNX"
+  },
+  "manual_inputs": {
+    "forward_pe": {
+      "value": null,
+      "percentile": null,
+      "as_of": null,
+      "source": "手工配置",
+      "percentile_window": "10Y",
+      "max_age_days": 45
+    },
+    "ttm_pe": {
+      "value": null,
+      "percentile": null,
+      "as_of": null,
+      "source": "手工配置",
+      "percentile_window": "10Y",
+      "max_age_days": 45
+    },
+    "cnn_fear_greed": {
+      "value": null,
+      "as_of": null,
+      "source": "手工配置",
+      "max_age_days": 3
+    },
+    "naaim": {
+      "value": null,
+      "as_of": null,
+      "source": "手工配置",
+      "max_age_days": 10
+    },
+    "us10y_score": {
+      "value": null,
+      "as_of": null,
+      "source": "手工配置",
+      "max_age_days": 30
+    }
+  },
+  "model": {
+    "weights": {
+      "valuation": 0.4,
+      "sentiment": 0.25,
+      "trend": 0.2,
+      "positioning": 0.1,
+      "macro": 0.05
+    },
+    "valuation_weights": {
+      "forward_pe": 0.625,
+      "ttm_pe": 0.375
+    },
+    "sentiment_weights": {
+      "vxn": 0.6,
+      "cnn": 0.4
+    },
+    "trend_weights": {
+      "rsi": 0.5,
+      "ma200": 0.5
+    },
+    "ma200_bands": [
+      {"max_deviation": 0, "score": 100},
+      {"max_deviation": 5, "score": 80},
+      {"max_deviation": 10, "score": 60},
+      {"max_deviation": 15, "score": 40},
+      {"max_deviation": null, "score": 20}
+    ],
+    "temperature_bands": [
+      {"min_score": 80, "state": "冰点", "multiplier": 3.0, "tone": "cold"},
+      {"min_score": 65, "state": "偏冷", "multiplier": 2.0, "tone": "cool"},
+      {"min_score": 50, "state": "正常", "multiplier": 1.0, "tone": "normal"},
+      {"min_score": 35, "state": "偏热", "multiplier": 0.6, "tone": "warm"},
+      {"min_score": 20, "state": "过热", "multiplier": 0.3, "tone": "hot"},
+      {"min_score": 0, "state": "极热", "multiplier": 0.0, "tone": "extreme"}
+    ]
+  },
+  "alerts": {
+    "vxn_high": 35,
+    "forward_pe_percentile_low": 10,
+    "index_drop_pct": -3,
+    "naaim_low": 20,
+    "naaim_high": 100,
+    "us10y_daily_drop_pct_points": -0.15
+  }
+}
