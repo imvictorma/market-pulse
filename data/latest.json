@@ -1,0 +1,140 @@
+{
+  "report_date": "2026-08-07",
+  "generated_at": "2026-08-07T23:55:39+08:00",
+  "timezone": "Asia/Shanghai",
+  "market": {
+    "ndx": {
+      "ticker": "^NDX",
+      "value": 29706.83,
+      "daily_return": 1.14,
+      "as_of": "2026-08-07",
+      "source": "Yahoo Finance",
+      "freshness_status": "fresh",
+      "error": null
+    },
+    "spx": {
+      "ticker": "^GSPC",
+      "value": 7756.78,
+      "daily_return": 0.61,
+      "as_of": "2026-08-07",
+      "source": "Yahoo Finance",
+      "freshness_status": "fresh",
+      "error": null
+    },
+    "qqq": {
+      "ticker": "QQQ",
+      "value": 722.62,
+      "daily_return": 1.12,
+      "as_of": "2026-08-07",
+      "source": "Yahoo Finance",
+      "freshness_status": "fresh",
+      "error": null,
+      "return_5d": 5.03,
+      "return_20d": -0.4,
+      "rsi": 57.02,
+      "ma200": 647.85,
+      "ma200_dev": 11.54
+    },
+    "vxn": {
+      "ticker": "^VXN",
+      "value": 23.05,
+      "daily_return": -3.76,
+      "as_of": "2026-08-07",
+      "source": "Yahoo Finance",
+      "freshness_status": "fresh",
+      "error": null,
+      "daily_change": -0.9,
+      "percentile": 70.4,
+      "percentile_window": "756 个交易日"
+    },
+    "us10y": {
+      "ticker": "^TNX",
+      "value": 4.64,
+      "daily_return": -0.54,
+      "as_of": "2026-08-07",
+      "source": "Yahoo Finance",
+      "freshness_status": "fresh",
+      "error": null,
+      "daily_change": -0.025,
+      "unit": "%"
+    }
+  },
+  "manual": {
+    "forward_pe": {
+      "value": null,
+      "percentile": null,
+      "as_of": null,
+      "source": "手工配置",
+      "freshness_status": "unavailable",
+      "percentile_window": "10Y",
+      "error": "尚未在 config.json 中配置"
+    },
+    "ttm_pe": {
+      "value": null,
+      "percentile": null,
+      "as_of": null,
+      "source": "手工配置",
+      "freshness_status": "unavailable",
+      "percentile_window": "10Y",
+      "error": "尚未在 config.json 中配置"
+    },
+    "cnn_fear_greed": {
+      "value": null,
+      "percentile": null,
+      "as_of": null,
+      "source": "手工配置",
+      "freshness_status": "unavailable",
+      "percentile_window": null,
+      "error": "尚未在 config.json 中配置"
+    },
+    "naaim": {
+      "value": null,
+      "percentile": null,
+      "as_of": null,
+      "source": "手工配置",
+      "freshness_status": "unavailable",
+      "percentile_window": null,
+      "error": "尚未在 config.json 中配置"
+    },
+    "us10y_score": {
+      "value": null,
+      "percentile": null,
+      "as_of": null,
+      "source": "手工配置",
+      "freshness_status": "unavailable",
+      "percentile_window": null,
+      "error": "尚未在 config.json 中配置"
+    }
+  },
+  "model": {
+    "score": null,
+    "state": "数据不足",
+    "multiplier": null,
+    "tone": "unavailable",
+    "dimensions": {
+      "valuation": null,
+      "sentiment": null,
+      "trend": 41.5,
+      "positioning": null,
+      "macro": null
+    },
+    "ma200_score": 40.0,
+    "missing_dimensions": [
+      "valuation",
+      "sentiment",
+      "positioning",
+      "macro"
+    ]
+  },
+  "summary": "科技股今日跑赢大盘；综合温度因配置项缺失暂不可用，请先查看数据状态。",
+  "alerts": [],
+  "fetch_failures": [],
+  "data_quality": "incomplete",
+  "model_weights": {
+    "valuation": 0.4,
+    "sentiment": 0.25,
+    "trend": 0.2,
+    "positioning": 0.1,
+    "macro": 0.05
+  }
+}
