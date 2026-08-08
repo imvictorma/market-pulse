@@ -1,12 +1,12 @@
 {
   "report_date": "2026-08-07",
-  "generated_at": "2026-08-07T23:55:39+08:00",
+  "generated_at": "2026-08-08T23:33:34+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
       "ticker": "^NDX",
-      "value": 29706.83,
-      "daily_return": 1.14,
+      "value": 29722.3,
+      "daily_return": 1.19,
       "as_of": "2026-08-07",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
@@ -14,8 +14,8 @@
     },
     "spx": {
       "ticker": "^GSPC",
-      "value": 7756.78,
-      "daily_return": 0.61,
+      "value": 7757.64,
+      "daily_return": 0.62,
       "as_of": "2026-08-07",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
@@ -23,39 +23,39 @@
     },
     "qqq": {
       "ticker": "QQQ",
-      "value": 722.62,
-      "daily_return": 1.12,
+      "value": 723.03,
+      "daily_return": 1.17,
       "as_of": "2026-08-07",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "return_5d": 5.03,
-      "return_20d": -0.4,
-      "rsi": 57.02,
+      "return_5d": 5.09,
+      "return_20d": -0.34,
+      "rsi": 57.15,
       "ma200": 647.85,
-      "ma200_dev": 11.54
+      "ma200_dev": 11.6
     },
     "vxn": {
       "ticker": "^VXN",
-      "value": 23.05,
-      "daily_return": -3.76,
+      "value": 22.82,
+      "daily_return": -4.72,
       "as_of": "2026-08-07",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": -0.9,
-      "percentile": 70.4,
+      "daily_change": -1.13,
+      "percentile": 68.7,
       "percentile_window": "756 个交易日"
     },
     "us10y": {
       "ticker": "^TNX",
-      "value": 4.64,
-      "daily_return": -0.54,
+      "value": 4.66,
+      "daily_return": -0.21,
       "as_of": "2026-08-07",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": -0.025,
+      "daily_change": -0.01,
       "unit": "%"
     }
   },
@@ -114,7 +114,7 @@
     "dimensions": {
       "valuation": null,
       "sentiment": null,
-      "trend": 41.5,
+      "trend": 41.4,
       "positioning": null,
       "macro": null
     },

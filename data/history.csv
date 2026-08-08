@@ -1,2 +1,2 @@
 date,generated_at,score,state,multiplier,ndx_change,spx_change,qqq_change,qqq_5d_change,qqq_20d_change,vxn,us10y,forward_pe,forward_pe_percentile,ttm_pe,ttm_pe_percentile,cnn_fear_greed,naaim,rsi,ma200_dev,valuation_score,sentiment_score,trend_score,positioning_score,macro_score,data_quality,one_line_summary
-2026-08-07,2026-08-07T23:55:39+08:00,,数据不足,,1.14,0.61,1.12,5.03,-0.4,23.05,4.64,,,,,,,57.02,11.54,,,41.5,,,incomplete,科技股今日跑赢大盘；综合温度因配置项缺失暂不可用，请先查看数据状态。
+2026-08-07,2026-08-08T23:33:34+08:00,,数据不足,,1.19,0.62,1.17,5.09,-0.34,22.82,4.66,,,,,,,57.15,11.6,,,41.4,,,incomplete,科技股今日跑赢大盘；综合温度因配置项缺失暂不可用，请先查看数据状态。
