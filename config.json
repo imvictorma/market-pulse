@@ -11,37 +11,37 @@
   },
   "manual_inputs": {
     "forward_pe": {
-      "value": null,
-      "percentile": null,
-      "as_of": null,
-      "source": "手工配置",
+      "value": 21.47,
+      "percentile": 37.5,
+      "as_of": "2026-07-27",
+      "source": "Trendonify Nasdaq-100 Forward PE (10Y percentile)",
       "percentile_window": "10Y",
       "max_age_days": 45
     },
     "ttm_pe": {
-      "value": null,
-      "percentile": null,
-      "as_of": null,
-      "source": "手工配置",
+      "value": 36.25,
+      "percentile": 96.7,
+      "as_of": "2026-07-27",
+      "source": "Trendonify Nasdaq-100 PE (10Y percentile)",
       "percentile_window": "10Y",
       "max_age_days": 45
     },
     "cnn_fear_greed": {
-      "value": null,
-      "as_of": null,
-      "source": "手工配置",
+      "value": 63.7,
+      "as_of": "2026-08-07",
+      "source": "CNN Fear & Greed API",
       "max_age_days": 3
     },
     "naaim": {
-      "value": null,
-      "as_of": null,
-      "source": "手工配置",
-      "max_age_days": 10
+      "value": 84.02,
+      "as_of": "2026-07-22",
+      "source": "NAAIM Exposure Index (latest public value)",
+      "max_age_days": 30
     },
     "us10y_score": {
-      "value": null,
-      "as_of": null,
-      "source": "手工配置",
+      "value": 35,
+      "as_of": "2026-08-07",
+      "source": "Manual rule: 10Y Treasury 4.65% => 35/100",
       "max_age_days": 30
     }
   },
