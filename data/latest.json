@@ -1,6 +1,6 @@
 {
   "report_date": "2026-08-07",
-  "generated_at": "2026-08-08T23:45:17+08:00",
+  "generated_at": "2026-08-08T23:55:23+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
@@ -61,75 +61,70 @@
   },
   "manual": {
     "forward_pe": {
-      "value": null,
-      "percentile": null,
-      "as_of": null,
-      "source": "手工配置",
-      "freshness_status": "unavailable",
+      "value": 21.47,
+      "percentile": 37.5,
+      "as_of": "2026-07-27",
+      "source": "Trendonify Nasdaq-100 Forward PE (10Y percentile)",
+      "freshness_status": "manual",
       "percentile_window": "10Y",
-      "error": "尚未在 config.json 中配置"
+      "error": null
     },
     "ttm_pe": {
-      "value": null,
-      "percentile": null,
-      "as_of": null,
-      "source": "手工配置",
-      "freshness_status": "unavailable",
+      "value": 36.25,
+      "percentile": 96.7,
+      "as_of": "2026-07-27",
+      "source": "Trendonify Nasdaq-100 PE (10Y percentile)",
+      "freshness_status": "manual",
       "percentile_window": "10Y",
-      "error": "尚未在 config.json 中配置"
+      "error": null
     },
     "cnn_fear_greed": {
-      "value": null,
+      "value": 63.7,
       "percentile": null,
-      "as_of": null,
-      "source": "手工配置",
-      "freshness_status": "unavailable",
+      "as_of": "2026-08-07",
+      "source": "CNN Fear & Greed API",
+      "freshness_status": "manual",
       "percentile_window": null,
-      "error": "尚未在 config.json 中配置"
+      "error": null
     },
     "naaim": {
-      "value": null,
+      "value": 84.02,
       "percentile": null,
-      "as_of": null,
-      "source": "手工配置",
-      "freshness_status": "unavailable",
+      "as_of": "2026-07-22",
+      "source": "NAAIM Exposure Index (latest public value)",
+      "freshness_status": "manual",
       "percentile_window": null,
-      "error": "尚未在 config.json 中配置"
+      "error": null
     },
     "us10y_score": {
-      "value": null,
+      "value": 35.0,
       "percentile": null,
-      "as_of": null,
-      "source": "手工配置",
-      "freshness_status": "unavailable",
+      "as_of": "2026-08-07",
+      "source": "Manual rule: 10Y Treasury 4.65% => 35/100",
+      "freshness_status": "manual",
       "percentile_window": null,
-      "error": "尚未在 config.json 中配置"
+      "error": null
     }
   },
   "model": {
-    "score": null,
-    "state": "数据不足",
-    "multiplier": null,
-    "tone": "unavailable",
+    "score": 41.7,
+    "state": "偏热",
+    "multiplier": 0.6,
+    "tone": "warm",
     "dimensions": {
-      "valuation": null,
-      "sentiment": null,
+      "valuation": 40.3,
+      "sentiment": 55.7,
       "trend": 41.4,
-      "positioning": null,
-      "macro": null
+      "positioning": 16.0,
+      "macro": 35.0
     },
     "ma200_score": 40.0,
-    "missing_dimensions": [
-      "valuation",
-      "sentiment",
-      "positioning",
-      "macro"
-    ]
+    "missing_dimensions": []
   },
-  "summary": "科技股今日跑赢大盘；综合温度因配置项缺失暂不可用，请先查看数据状态。",
+  "summary": "科技股今日跑赢大盘；市场处于偏热区间，模型参考定投倍率为 0.6x。",
   "alerts": [],
   "fetch_failures": [],
-  "data_quality": "incomplete",
+  "data_quality": "complete",
   "model_weights": {
     "valuation": 0.4,
     "sentiment": 0.25,
