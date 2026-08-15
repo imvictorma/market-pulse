@@ -1,6 +1,6 @@
 {
   "report_date": "2026-08-14",
-  "generated_at": "2026-08-15T12:19:53+08:00",
+  "generated_at": "2026-08-15T16:36:46+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
@@ -64,9 +64,9 @@
       "value": 20.5,
       "percentile": 37.5,
       "as_of": "2026-08-14",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile retained from config (2026-07-27)",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=6<30，2026-07-27)",
       "freshness_status": "fresh",
-      "percentile_window": "10Y",
+      "percentile_window": "配置回退（历史 N=6<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
       "error": null
     },
@@ -74,50 +74,45 @@
       "value": 30.9,
       "percentile": 96.7,
       "as_of": "2026-08-14",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile retained from config (2026-07-27)",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=6<30，2026-07-27)",
       "freshness_status": "fresh",
-      "percentile_window": "10Y",
+      "percentile_window": "配置回退（历史 N=6<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
       "error": null
     },
     "cnn_fear_greed": {
-      "value": 63.7,
-      "percentile": null,
-      "as_of": "2026-08-07",
-      "source": "CNN Fear & Greed API",
-      "freshness_status": "stale",
-      "percentile_window": null,
+      "value": 64.9714285714286,
+      "as_of": "2026-08-14",
+      "rating": "greed",
+      "source": "CNN Fear & Greed public API",
+      "freshness_status": "fresh",
       "error": null
     },
     "naaim": {
-      "value": 84.02,
-      "percentile": null,
-      "as_of": "2026-07-22",
-      "source": "NAAIM Exposure Index (latest public value)",
-      "freshness_status": "manual",
-      "percentile_window": null,
+      "value": 77.34,
+      "as_of": "2026-08-15",
+      "source": "NAAIM official embeddable number (retrieved)",
+      "freshness_status": "fresh",
       "error": null
     },
     "us10y_score": {
       "value": 35.0,
-      "percentile": null,
-      "as_of": "2026-08-07",
-      "source": "Manual rule: 10Y Treasury 4.65% => 35/100",
-      "freshness_status": "manual",
-      "percentile_window": null,
+      "as_of": "2026-08-14",
+      "source": "^TNX 自动评分（当前 4.70%）",
+      "freshness_status": "fresh",
       "error": null
     }
   },
   "model": {
-    "score": 38.8,
+    "score": 39.3,
     "state": "偏热",
     "multiplier": 0.6,
     "tone": "warm",
     "dimensions": {
       "valuation": 40.3,
-      "sentiment": 45.1,
+      "sentiment": 44.6,
       "trend": 40.2,
-      "positioning": 16.0,
+      "positioning": 22.7,
       "macro": 35.0
     },
     "ma200_score": 40.0,
@@ -126,7 +121,7 @@
   "summary": "科技股今日跑赢大盘；市场处于偏热区间，模型参考定投倍率为 0.6x。",
   "alerts": [],
   "fetch_failures": [],
-  "data_quality": "stale",
+  "data_quality": "complete",
   "model_weights": {
     "valuation": 0.4,
     "sentiment": 0.25,
