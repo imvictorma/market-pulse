@@ -38,6 +38,63 @@ def valid_market():
 
 
 class IndicatorTests(unittest.TestCase):
+    def test_parse_chartrow_pe(self):
+        html = """
+        <h1>Nasdaq-100 P/E ratio: <span>30.9</span> · forward 20.5</h1>
+        <p>as of market close, Aug 14, 2026</p>
+        """
+        self.assertEqual(
+            generate.parse_chartrow_pe(html),
+            {"ttm_pe": 30.9, "forward_pe": 20.5, "as_of": "2026-08-14"},
+        )
+
+    def test_parse_cnn_fear_greed(self):
+        payload = json.dumps({
+            "fear_and_greed": {
+                "score": 64.9714,
+                "rating": "greed",
+                "timestamp": "2026-08-14T23:59:53+00:00",
+            }
+        })
+        self.assertEqual(
+            generate.parse_cnn_fear_greed(payload),
+            {"value": 64.9714, "as_of": "2026-08-14", "rating": "greed"},
+        )
+
+    def test_parse_naaim_number(self):
+        html = '<body><div class="h1 text-center">77.34</div></body>'
+        self.assertEqual(generate.parse_naaim_number(html), 77.34)
+
+    def test_dynamic_pe_percentile_uses_history(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "history.csv"
+            path.write_text(
+                "date,forward_pe,ttm_pe\n"
+                "2026-08-01,10,20\n"
+                "2026-08-02,20,30\n"
+                "2026-08-03,30,40\n",
+                encoding="utf-8",
+            )
+            now = datetime(2026, 8, 7, tzinfo=ZoneInfo("Asia/Shanghai"))
+            pct, window, as_of = generate.pe_percentile(
+                "forward_pe", 25, {"percentile": 37.5, "as_of": "2026-07-27"},
+                {"percentile_window_days": 3650, "min_percentile_observations": 2}, now, path,
+            )
+            self.assertEqual(pct, 75.0)
+            self.assertEqual(window, "动态历史（N=4）")
+            self.assertIsNone(as_of)
+
+    def test_automatic_us10y_score_uses_yield_bands(self):
+        config = load_config()
+        metric, error = generate.automatic_us10y_score(
+            config,
+            {"us10y": {"value": 4.64, "as_of": "2026-08-14", "freshness_status": "fresh"}},
+            None,
+        )
+        self.assertIsNone(error)
+        self.assertEqual(metric["value"], 35.0)
+        self.assertEqual(metric["freshness_status"], "fresh")
+
     def test_pct_return_uses_n_sessions_back(self):
         series = pd.Series([100, 102, 104, 110])
         self.assertAlmostEqual(generate.pct_return(series, 1), (110 / 104 - 1) * 100)
