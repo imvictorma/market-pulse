@@ -11,6 +11,7 @@ import math
 import os
 import re
 import sys
+import time
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 from pathlib import Path
@@ -29,6 +30,10 @@ HISTORY_PATH = ROOT / "data" / "history.csv"
 LATEST_PATH = ROOT / "data" / "latest.json"
 SITE_PATH = ROOT / "site" / "index.html"
 DEFAULT_PE_SOURCE = "https://chartrow.com/nasdaq-100/pe-ratio"
+DEFAULT_CNN_FEAR_GREED_SOURCE = "https://production.dataviz.cnn.io/index/fearandgreed/graphdata"
+DEFAULT_NAAIM_SOURCE = "https://index.naaim.org/embeddable/number"
+DEFAULT_HTTP_RETRIES = 3
+DEFAULT_HTTP_BACKOFF_SECONDS = 1.5
 
 HISTORY_FIELDS = [
     "date", "generated_at", "score", "state", "multiplier", "ndx_change",
@@ -99,6 +104,37 @@ def get_now(timezone_name: str) -> datetime:
         return datetime.now(timezone.utc).astimezone()
 
 
+def request_with_retries(
+    method: str,
+    url: str,
+    *,
+    timeout: int = 30,
+    headers: dict[str, str] | None = None,
+    retries: int = DEFAULT_HTTP_RETRIES,
+    backoff_seconds: float = DEFAULT_HTTP_BACKOFF_SECONDS,
+) -> requests.Response:
+    """Fetch an external source with bounded retries and exponential backoff."""
+    attempts = max(1, int(retries))
+    last_error: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            response = requests.request(
+                method,
+                url,
+                headers=headers,
+                timeout=max(5, int(timeout)),
+            )
+            if response.status_code in {408, 425, 429} or response.status_code >= 500:
+                raise requests.HTTPError(f"HTTP {response.status_code}")
+            response.raise_for_status()
+            return response
+        except (requests.RequestException, ValueError) as exc:
+            last_error = exc
+            if attempt + 1 < attempts:
+                time.sleep(max(0.0, float(backoff_seconds)) * (2 ** attempt))
+    raise RuntimeError(f"请求失败（{attempts} 次）：{last_error}") from last_error
+
+
 def validate_config(config: dict[str, Any]) -> None:
     ticker_names = set(config.get("tickers", {}))
     expected_tickers = {"ndx", "spx", "qqq", "vxn", "us10y"}
@@ -120,23 +156,28 @@ def validate_config(config: dict[str, Any]) -> None:
 
 
 def download_ticker(ticker: str, period: str = "5y") -> FetchResult:
-    try:
-        import yfinance as yf
+    last_error: Exception | None = None
+    for attempt in range(DEFAULT_HTTP_RETRIES):
+        try:
+            import yfinance as yf
 
-        frame = yf.download(
-            ticker,
-            period=period,
-            interval="1d",
-            auto_adjust=False,
-            progress=False,
-            threads=False,
-            timeout=20,
-        )
-        if frame is None or frame.empty:
-            return FetchResult(None, "数据源返回空结果")
-        return FetchResult(frame)
-    except Exception as exc:  # Every ticker degrades independently.
-        return FetchResult(None, f"{type(exc).__name__}: {exc}")
+            frame = yf.download(
+                ticker,
+                period=period,
+                interval="1d",
+                auto_adjust=False,
+                progress=False,
+                threads=False,
+                timeout=20,
+            )
+            if frame is None or frame.empty:
+                raise ValueError("数据源返回空结果")
+            return FetchResult(frame)
+        except Exception as exc:  # Every ticker degrades independently.
+            last_error = exc
+            if attempt + 1 < DEFAULT_HTTP_RETRIES:
+                time.sleep(DEFAULT_HTTP_BACKOFF_SECONDS * (2 ** attempt))
+    return FetchResult(None, f"{type(last_error).__name__}: {last_error}")
 
 
 def close_series(frame: pd.DataFrame) -> pd.Series:
@@ -295,40 +336,220 @@ def parse_chartrow_pe(payload: str) -> dict[str, Any]:
     }
 
 
-def automatic_pe_metrics(config: dict[str, Any], now: datetime) -> tuple[dict[str, dict[str, Any]] | None, str | None]:
-    """Fetch current PE values while retaining configured historical percentile ranks."""
+def parse_cnn_fear_greed(payload: str | dict[str, Any]) -> dict[str, Any]:
+    """Parse CNN's public Fear & Greed graphdata response."""
+    data = json.loads(payload) if isinstance(payload, str) else payload
+    block = data.get("fear_and_greed", {})
+    score = finite_number(block.get("score"))
+    if score is None or not 0 <= score <= 100:
+        raise ValueError("CNN Fear & Greed score 不在 0–100 范围")
+    timestamp = str(block.get("timestamp") or "")
+    try:
+        as_of = datetime.fromisoformat(timestamp.replace("Z", "+00:00")).date().isoformat()
+    except ValueError as exc:
+        raise ValueError("CNN Fear & Greed timestamp 无效") from exc
+    return {"value": score, "as_of": as_of, "rating": block.get("rating")}
+
+
+def parse_naaim_number(payload: str) -> float:
+    """Parse the current number from NAAIM's public embeddable iframe."""
+    body = re.search(r"<body\b[^>]*>(.*?)</body>", payload, flags=re.I | re.S)
+    text = html.unescape(body.group(1) if body else payload)
+    text = re.sub(r"<[^>]+>", " ", text)
+    match = re.search(r"(?<![\d.])-?\d{1,3}(?:\.\d+)?(?![\d.])", " ".join(text.split()))
+    value = finite_number(match.group(0)) if match else None
+    if value is None or not -200 <= value <= 200:
+        raise ValueError("NAAIM Exposure Index 数值未找到或超出范围")
+    return value
+
+
+def history_metric_values(name: str, path: Path = HISTORY_PATH, now: datetime | None = None, window_days: int = 3650) -> list[float]:
+    values: list[float] = []
+    if not path.exists():
+        return values
+    cutoff = now.date().toordinal() - max(1, int(window_days)) if now else None
+    try:
+        with path.open("r", encoding="utf-8", newline="") as handle:
+            for row in csv.DictReader(handle):
+                if cutoff is not None:
+                    row_date = safe_date(row.get("date"))
+                    if row_date is None or row_date.toordinal() < cutoff:
+                        continue
+                value = finite_number(row.get(name))
+                if value is not None:
+                    values.append(value)
+    except (OSError, csv.Error) as exc:
+        print(f"警告：无法读取 PE 历史缓存 {path}: {exc}", file=sys.stderr)
+    return values
+
+
+def pe_percentile(
+    name: str,
+    current: float,
+    raw: dict[str, Any],
+    settings: dict[str, Any],
+    now: datetime,
+    history_path: Path = HISTORY_PATH,
+) -> tuple[float | None, str, str | None]:
+    """Use dashboard history for a dynamic rank once enough observations exist."""
+    window_days = max(30, int(settings.get("percentile_window_days", 3650)))
+    minimum = max(2, int(settings.get("min_percentile_observations", 30)))
+    history = history_metric_values(name, history_path, now, window_days)
+    observations = history + [current]
+    configured = rounded(raw.get("percentile"), 1)
+    configured_as_of = raw.get("as_of")
+    if len(observations) >= minimum:
+        percentile = rounded(historical_percentile(pd.Series(observations), len(observations)), 1)
+        return percentile, f"动态历史（N={len(observations)}）", None
+    note = f"配置回退（历史 N={len(history)}<{minimum}" + (f"，{configured_as_of}" if configured_as_of else "") + ")"
+    return configured, note, configured_as_of
+
+
+def automatic_pe_metrics(
+    config: dict[str, Any],
+    now: datetime,
+    previous: dict[str, Any] | None = None,
+    history_path: Path = HISTORY_PATH,
+) -> tuple[dict[str, dict[str, Any]] | None, str | None]:
+    """Fetch current PE values and calculate a transparent rolling percentile."""
     settings = config.get("automatic_inputs", {}).get("pe", {})
     if settings.get("enabled", True) is False:
         return None, None
     url = str(settings.get("url") or DEFAULT_PE_SOURCE)
     timeout = max(5, int(settings.get("timeout_seconds", 30)))
     try:
-        response = requests.get(
+        response = request_with_retries(
+            "GET",
             url,
             headers={"User-Agent": "Market-Pulse/1.0 (+https://github.com/maqianxiong/market-pulse)"},
             timeout=timeout,
+            retries=settings.get("retries", DEFAULT_HTTP_RETRIES),
+            backoff_seconds=settings.get("backoff_seconds", DEFAULT_HTTP_BACKOFF_SECONDS),
         )
-        response.raise_for_status()
         values = parse_chartrow_pe(response.text)
         raw_inputs = config.get("manual_inputs", {})
         metrics: dict[str, dict[str, Any]] = {}
         for name in ("forward_pe", "ttm_pe"):
             raw = raw_inputs.get(name, {})
-            percentile = finite_number(raw.get("percentile"))
-            percentile_note = f" ({raw.get('as_of')})" if raw.get("as_of") else ""
+            percentile, percentile_note, percentile_as_of = pe_percentile(
+                name, values[name], raw, settings, now, history_path
+            )
             metrics[name] = {
                 "value": rounded(values[name]),
-                "percentile": rounded(percentile, 1),
+                "percentile": percentile,
                 "as_of": values["as_of"],
-                "source": f"ChartRow Nasdaq-100 P/E (automatic); percentile retained from config{percentile_note}",
+                "source": f"ChartRow Nasdaq-100 P/E (automatic); percentile {percentile_note}",
                 "freshness_status": "fresh",
-                "percentile_window": raw.get("percentile_window") or "10Y",
-                "percentile_as_of": raw.get("as_of"),
+                "percentile_window": percentile_note,
+                "percentile_as_of": percentile_as_of,
                 "error": None,
             }
         return metrics, None
     except Exception as exc:
         return None, f"{type(exc).__name__}: {exc}"
+
+
+def fallback_metric(
+    name: str,
+    current: dict[str, Any],
+    previous: dict[str, Any] | None,
+    error: str,
+) -> dict[str, Any]:
+    """Keep the last known good value and expose the source failure visibly."""
+    prior = (previous or {}).get("manual", {}).get(name, {})
+    base = prior if finite_number(prior.get("value")) is not None else current
+    metric = dict(base)
+    metric["freshness_status"] = "stale" if finite_number(metric.get("value")) is not None else "unavailable"
+    metric["error"] = error
+    metric["source"] = f"{metric.get('source') or '缓存'}（回退）"
+    return metric
+
+
+def automatic_cnn_metric(config: dict[str, Any]) -> tuple[dict[str, Any] | None, str | None]:
+    settings = config.get("automatic_inputs", {}).get("cnn_fear_greed", {})
+    if settings.get("enabled", True) is False:
+        return None, None
+    try:
+        response = request_with_retries(
+            "GET",
+            str(settings.get("url") or DEFAULT_CNN_FEAR_GREED_SOURCE),
+            headers={
+                "User-Agent": "Mozilla/5.0 (Market-Pulse)",
+                "Accept": "application/json, text/plain, */*",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Referer": "https://edition.cnn.com/markets/fear-and-greed",
+                "Origin": "https://edition.cnn.com",
+            },
+            timeout=settings.get("timeout_seconds", 30),
+            retries=settings.get("retries", DEFAULT_HTTP_RETRIES),
+            backoff_seconds=settings.get("backoff_seconds", DEFAULT_HTTP_BACKOFF_SECONDS),
+        )
+        parsed = parse_cnn_fear_greed(response.text)
+        return {
+            **parsed,
+            "source": "CNN Fear & Greed public API",
+            "freshness_status": "fresh",
+            "error": None,
+        }, None
+    except Exception as exc:
+        return None, f"{type(exc).__name__}: {exc}"
+
+
+def automatic_naaim_metric(config: dict[str, Any], now: datetime) -> tuple[dict[str, Any] | None, str | None]:
+    settings = config.get("automatic_inputs", {}).get("naaim", {})
+    if settings.get("enabled", True) is False:
+        return None, None
+    try:
+        response = request_with_retries(
+            "GET",
+            str(settings.get("url") or DEFAULT_NAAIM_SOURCE),
+            headers={
+                "User-Agent": "Mozilla/5.0 (Market-Pulse)",
+                "Referer": "https://naaim.org/programs/naaim-exposure-index/",
+            },
+            timeout=settings.get("timeout_seconds", 30),
+            retries=settings.get("retries", DEFAULT_HTTP_RETRIES),
+            backoff_seconds=settings.get("backoff_seconds", DEFAULT_HTTP_BACKOFF_SECONDS),
+        )
+        return {
+            "value": rounded(parse_naaim_number(response.text)),
+            "as_of": now.date().isoformat(),
+            "source": "NAAIM official embeddable number (retrieved)",
+            "freshness_status": "fresh",
+            "error": None,
+        }, None
+    except Exception as exc:
+        return None, f"{type(exc).__name__}: {exc}"
+
+
+def automatic_us10y_score(
+    config: dict[str, Any],
+    market: dict[str, Any],
+    previous: dict[str, Any] | None,
+) -> tuple[dict[str, Any] | None, str | None]:
+    settings = config.get("automatic_inputs", {}).get("us10y_score", {})
+    if settings.get("enabled", True) is False:
+        return None, None
+    metric = market.get("us10y", {})
+    yield_value = available(metric)
+    if yield_value is None:
+        return None, "^TNX 当前不可用"
+    bands = settings.get("bands", [])
+    try:
+        score = next(
+            float(band["score"])
+            for band in bands
+            if band.get("max_yield") is None or yield_value <= float(band["max_yield"])
+        )
+    except (StopIteration, TypeError, ValueError) as exc:
+        return None, f"利率评分区间配置无效: {exc}"
+    return {
+        "value": rounded(score),
+        "as_of": metric.get("as_of"),
+        "source": f"^TNX 自动评分（当前 {yield_value:.2f}%）",
+        "freshness_status": metric.get("freshness_status", "stale"),
+        "error": metric.get("error"),
+    }, None
 
 
 def manual_metric(name: str, raw: dict[str, Any], now: datetime) -> dict[str, Any]:
@@ -522,16 +743,34 @@ def data_quality(market: dict[str, Any], manual: dict[str, Any]) -> str:
 def build_snapshot(config: dict[str, Any], now: datetime, previous: dict[str, Any] | None) -> dict[str, Any]:
     market, failures = fetch_market(config, previous)
     manual = parse_manual_inputs(config, now)
-    automatic_pe, pe_error = automatic_pe_metrics(config, now)
+    automatic_pe, pe_error = automatic_pe_metrics(config, now, previous)
     if automatic_pe:
         manual.update(automatic_pe)
     elif pe_error:
         failures.append(f"PE: {pe_error}")
         for name in ("forward_pe", "ttm_pe"):
-            metric = manual[name]
-            if metric.get("freshness_status") not in {"unavailable", "stale"}:
-                metric["freshness_status"] = "stale"
-                metric["error"] = pe_error
+            manual[name] = fallback_metric(name, manual[name], previous, pe_error)
+
+    automatic_cnn, cnn_error = automatic_cnn_metric(config)
+    if automatic_cnn:
+        manual["cnn_fear_greed"] = automatic_cnn
+    elif cnn_error:
+        failures.append(f"CNN Fear & Greed: {cnn_error}")
+        manual["cnn_fear_greed"] = fallback_metric("cnn_fear_greed", manual["cnn_fear_greed"], previous, cnn_error)
+
+    automatic_naaim, naaim_error = automatic_naaim_metric(config, now)
+    if automatic_naaim:
+        manual["naaim"] = automatic_naaim
+    elif naaim_error:
+        failures.append(f"NAAIM: {naaim_error}")
+        manual["naaim"] = fallback_metric("naaim", manual["naaim"], previous, naaim_error)
+
+    automatic_rate, rate_error = automatic_us10y_score(config, market, previous)
+    if automatic_rate:
+        manual["us10y_score"] = automatic_rate
+    elif rate_error:
+        failures.append(f"10Y评分: {rate_error}")
+        manual["us10y_score"] = fallback_metric("us10y_score", manual["us10y_score"], previous, rate_error)
     model_result = score_model(config, market, manual)
     summary = make_summary(model_result, market)
     return {
@@ -794,7 +1033,7 @@ def render_html(snapshot: dict[str, Any], history: list[dict[str, Any]], output:
       <article class="chart-card"><div class="section-head"><h2>历史温度</h2><p>最近 180 个有效记录</p></div><div class="chart-wrap"><canvas id="historyChart" aria-label="市场温度历史曲线"></canvas><div class="chart-empty" id="chartEmpty">积累第二个有效交易日后显示趋势</div></div><div class="chart-legend"><span><i style="background:#1b78d0"></i>市场温度</span><span><i style="background:#e7bb71"></i>正常区间 50–65</span></div></article>
       <article class="detail-card"><div class="section-head"><h2>指标状态</h2><p>不隐藏缺失与过期</p></div>$detail_rows<details><summary>查看透明模型权重</summary><div class="formula">$weight_text<br>温度越高表示估值、情绪、趋势、仓位与利率环境的逆向吸引力越高。缺少任一维度时不强行计算总分。</div></details></article>
     </section>
-    <footer><strong>数据说明</strong><br>行情来自 Yahoo Finance；估值、CNN 市场情绪、NAAIM 与利率环境评分来自 config.json 手工配置，页面会标明新鲜度。VXN 分位使用最多 756 个最近交易日。<br><br><strong>免责声明</strong><br>本站仅作个人研究和记录，模型倍率不是买卖指令，不构成任何投资建议。市场有风险，请独立判断。</footer>
+    <footer><strong>数据说明</strong><br>行情来自 Yahoo Finance；PE 来自 ChartRow，CNN 情绪来自公开接口，NAAIM 来自官方嵌入值，利率评分根据 ^TNX 自动计算；抓取失败时回退到最近成功值或 config.json，并标明新鲜度。PE 百分位在积累足够历史后按本仪表盘历史动态计算。VXN 分位使用最多 756 个最近交易日。<br><br><strong>免责声明</strong><br>本站仅作个人研究和记录，模型倍率不是买卖指令，不构成任何投资建议。市场有风险，请独立判断。</footer>
   </main>
   <script>
   (()=>{const data=$chart_data,canvas=document.getElementById('historyChart'),empty=document.getElementById('chartEmpty');if(data.length<2)return;empty.hidden=true;const ctx=canvas.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);function draw(){const box=canvas.getBoundingClientRect(),w=Math.max(280,box.width),h=Math.max(180,box.height);canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const p={l:34,r:12,t:16,b:25},cw=w-p.l-p.r,ch=h-p.t-p.b,x=i=>p.l+i/(data.length-1)*cw,y=v=>p.t+(100-v)/100*ch;ctx.fillStyle='rgba(224,164,69,.08)';ctx.fillRect(p.l,y(65),cw,y(50)-y(65));ctx.strokeStyle='rgba(61,82,98,.11)';ctx.lineWidth=1;ctx.font='10px -apple-system,sans-serif';ctx.fillStyle='#82909c';ctx.textAlign='right';[0,20,40,60,80,100].forEach(v=>{ctx.beginPath();ctx.moveTo(p.l,y(v));ctx.lineTo(w-p.r,y(v));ctx.stroke();ctx.fillText(v,p.l-8,y(v)+3)});const grad=ctx.createLinearGradient(0,p.t,0,h-p.b);grad.addColorStop(0,'rgba(23,105,224,.22)');grad.addColorStop(1,'rgba(23,105,224,0)');ctx.beginPath();data.forEach((v,i)=>i?ctx.lineTo(x(i),y(v.score)):ctx.moveTo(x(i),y(v.score)));ctx.lineTo(x(data.length-1),h-p.b);ctx.lineTo(x(0),h-p.b);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();data.forEach((v,i)=>i?ctx.lineTo(x(i),y(v.score)):ctx.moveTo(x(i),y(v.score)));ctx.strokeStyle='#1769e0';ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.stroke();ctx.fillStyle='#687889';ctx.textAlign='left';ctx.fillText(data[0].date.slice(5),p.l,h-5);ctx.textAlign='right';ctx.fillText(data.at(-1).date.slice(5),w-p.r,h-5)}draw();new ResizeObserver(draw).observe(canvas)})();
