@@ -1,6 +1,6 @@
 {
   "report_date": "2026-08-14",
-  "generated_at": "2026-08-15T07:44:47+08:00",
+  "generated_at": "2026-08-15T12:19:53+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
@@ -61,21 +61,23 @@
   },
   "manual": {
     "forward_pe": {
-      "value": 21.47,
+      "value": 20.5,
       "percentile": 37.5,
-      "as_of": "2026-07-27",
-      "source": "Trendonify Nasdaq-100 Forward PE (10Y percentile)",
-      "freshness_status": "manual",
+      "as_of": "2026-08-14",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile retained from config (2026-07-27)",
+      "freshness_status": "fresh",
       "percentile_window": "10Y",
+      "percentile_as_of": "2026-07-27",
       "error": null
     },
     "ttm_pe": {
-      "value": 36.25,
+      "value": 30.9,
       "percentile": 96.7,
-      "as_of": "2026-07-27",
-      "source": "Trendonify Nasdaq-100 PE (10Y percentile)",
-      "freshness_status": "manual",
+      "as_of": "2026-08-14",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile retained from config (2026-07-27)",
+      "freshness_status": "fresh",
       "percentile_window": "10Y",
+      "percentile_as_of": "2026-07-27",
       "error": null
     },
     "cnn_fear_greed": {
