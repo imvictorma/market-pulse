@@ -49,7 +49,35 @@
     "pe": {
       "enabled": true,
       "url": "https://chartrow.com/nasdaq-100/pe-ratio",
-      "timeout_seconds": 30
+      "timeout_seconds": 30,
+      "retries": 3,
+      "backoff_seconds": 1.5,
+      "percentile_window_days": 3650,
+      "min_percentile_observations": 30
+    },
+    "cnn_fear_greed": {
+      "enabled": true,
+      "url": "https://production.dataviz.cnn.io/index/fearandgreed/graphdata",
+      "timeout_seconds": 30,
+      "retries": 3,
+      "backoff_seconds": 1.5
+    },
+    "naaim": {
+      "enabled": true,
+      "url": "https://index.naaim.org/embeddable/number",
+      "timeout_seconds": 30,
+      "retries": 3,
+      "backoff_seconds": 1.5
+    },
+    "us10y_score": {
+      "enabled": true,
+      "bands": [
+        {"max_yield": 3.5, "score": 100},
+        {"max_yield": 4.0, "score": 80},
+        {"max_yield": 4.5, "score": 60},
+        {"max_yield": 5.0, "score": 35},
+        {"max_yield": null, "score": 20}
+      ]
     }
   },
   "model": {
