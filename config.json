@@ -45,6 +45,13 @@
       "max_age_days": 30
     }
   },
+  "automatic_inputs": {
+    "pe": {
+      "enabled": true,
+      "url": "https://chartrow.com/nasdaq-100/pe-ratio",
+      "timeout_seconds": 30
+    }
+  },
   "model": {
     "weights": {
       "valuation": 0.4,
@@ -73,12 +80,12 @@
       {"max_deviation": null, "score": 20}
     ],
     "temperature_bands": [
-      {"min_score": 80, "state": "冰点", "multiplier": 3.0, "tone": "cold"},
-      {"min_score": 65, "state": "偏冷", "multiplier": 2.0, "tone": "cool"},
-      {"min_score": 50, "state": "正常", "multiplier": 1.0, "tone": "normal"},
-      {"min_score": 35, "state": "偏热", "multiplier": 0.6, "tone": "warm"},
-      {"min_score": 20, "state": "过热", "multiplier": 0.3, "tone": "hot"},
-      {"min_score": 0, "state": "极热", "multiplier": 0.0, "tone": "extreme"}
+      {"min_score": 80, "state": "鍐扮偣", "multiplier": 3.0, "tone": "cold"},
+      {"min_score": 65, "state": "鍋忓喎", "multiplier": 2.0, "tone": "cool"},
+      {"min_score": 50, "state": "姝ｅ父", "multiplier": 1.0, "tone": "normal"},
+      {"min_score": 35, "state": "鍋忕儹", "multiplier": 0.6, "tone": "warm"},
+      {"min_score": 20, "state": "杩囩儹", "multiplier": 0.3, "tone": "hot"},
+      {"min_score": 0, "state": "鏋佺儹", "multiplier": 0.0, "tone": "extreme"}
     ]
   },
   "alerts": {
