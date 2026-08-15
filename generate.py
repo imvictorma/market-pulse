@@ -9,6 +9,7 @@ import html
 import json
 import math
 import os
+import re
 import sys
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
@@ -27,6 +28,7 @@ DEFAULT_CONFIG = ROOT / "config.json"
 HISTORY_PATH = ROOT / "data" / "history.csv"
 LATEST_PATH = ROOT / "data" / "latest.json"
 SITE_PATH = ROOT / "site" / "index.html"
+DEFAULT_PE_SOURCE = "https://chartrow.com/nasdaq-100/pe-ratio"
 
 HISTORY_FIELDS = [
     "date", "generated_at", "score", "state", "multiplier", "ndx_change",
@@ -51,7 +53,7 @@ def load_json(path: Path, default: Any = None) -> Any:
         with path.open("r", encoding="utf-8") as handle:
             return json.load(handle)
     except (OSError, json.JSONDecodeError) as exc:
-        print(f"警告：无法读取 {path}: {exc}", file=sys.stderr)
+        print(f"璀﹀憡锛氭棤娉曡鍙?{path}: {exc}", file=sys.stderr)
         return default
 
 
@@ -101,20 +103,20 @@ def validate_config(config: dict[str, Any]) -> None:
     ticker_names = set(config.get("tickers", {}))
     expected_tickers = {"ndx", "spx", "qqq", "vxn", "us10y"}
     if ticker_names != expected_tickers:
-        raise ValueError(f"tickers 必须恰好包含：{', '.join(sorted(expected_tickers))}")
+        raise ValueError(f"tickers 蹇呴』鎭板ソ鍖呭惈锛歿', '.join(sorted(expected_tickers))}")
     weights = config.get("model", {}).get("weights", {})
     expected = {"valuation", "sentiment", "trend", "positioning", "macro"}
     if set(weights) != expected:
-        raise ValueError(f"model.weights 必须恰好包含：{', '.join(sorted(expected))}")
+        raise ValueError(f"model.weights 蹇呴』鎭板ソ鍖呭惈锛歿', '.join(sorted(expected))}")
     if not math.isclose(sum(float(value) for value in weights.values()), 1.0, abs_tol=1e-9):
-        raise ValueError("model.weights 权重之和必须为 1")
+        raise ValueError("model.weights 鏉冮噸涔嬪拰蹇呴』涓?1")
     for name in ("valuation_weights", "sentiment_weights", "trend_weights"):
         values = config.get("model", {}).get(name, {})
         if not values or not math.isclose(sum(float(v) for v in values.values()), 1.0, abs_tol=1e-9):
-            raise ValueError(f"model.{name} 权重之和必须为 1")
+            raise ValueError(f"model.{name} 鏉冮噸涔嬪拰蹇呴』涓?1")
     bands = config.get("model", {}).get("temperature_bands", [])
     if not bands or min(float(band["min_score"]) for band in bands) > 0:
-        raise ValueError("temperature_bands 必须覆盖 0 分")
+        raise ValueError("temperature_bands 蹇呴』瑕嗙洊 0 鍒?)
 
 
 def download_ticker(ticker: str, period: str = "5y") -> FetchResult:
@@ -131,7 +133,7 @@ def download_ticker(ticker: str, period: str = "5y") -> FetchResult:
             timeout=20,
         )
         if frame is None or frame.empty:
-            return FetchResult(None, "数据源返回空结果")
+            return FetchResult(None, "鏁版嵁婧愯繑鍥炵┖缁撴灉")
         return FetchResult(frame)
     except Exception as exc:  # Every ticker degrades independently.
         return FetchResult(None, f"{type(exc).__name__}: {exc}")
@@ -139,7 +141,7 @@ def download_ticker(ticker: str, period: str = "5y") -> FetchResult:
 
 def close_series(frame: pd.DataFrame) -> pd.Series:
     if "Close" not in frame.columns:
-        raise ValueError("行情缺少 Close 字段")
+        raise ValueError("琛屾儏缂哄皯 Close 瀛楁")
     series = frame["Close"]
     if isinstance(series, pd.DataFrame):
         series = series.iloc[:, 0]
@@ -196,7 +198,7 @@ def as_of_from_series(series: pd.Series) -> str:
 def market_metric(name: str, ticker: str, frame: pd.DataFrame, config: dict[str, Any]) -> dict[str, Any]:
     closes = close_series(frame)
     if len(closes) < 2:
-        raise ValueError("有效收盘价不足 2 个交易日")
+        raise ValueError("鏈夋晥鏀剁洏浠蜂笉瓒?2 涓氦鏄撴棩")
     metric: dict[str, Any] = {
         "ticker": ticker,
         "value": rounded(closes.iloc[-1]),
@@ -222,7 +224,7 @@ def market_metric(name: str, ticker: str, frame: pd.DataFrame, config: dict[str,
         metric.update({
             "daily_change": rounded(finite_number(closes.iloc[-1]) - finite_number(closes.iloc[-2])),
             "percentile": rounded(historical_percentile(closes, window), 1),
-            "percentile_window": f"{actual_window} 个交易日",
+            "percentile_window": f"{actual_window} 涓氦鏄撴棩",
         })
     elif name == "us10y":
         # Yahoo's ^TNX close is conventionally displayed directly as a percentage yield.
@@ -253,7 +255,7 @@ def fetch_market(config: dict[str, Any], previous: dict[str, Any] | None) -> tup
         result = download_ticker(str(ticker), period=period)
         try:
             if result.frame is None:
-                raise ValueError(result.error or "未知抓取错误")
+                raise ValueError(result.error or "鏈煡鎶撳彇閿欒")
             market[name] = market_metric(name, str(ticker), result.frame, config)
         except Exception as exc:
             error = str(exc)
@@ -268,6 +270,67 @@ def fetch_market(config: dict[str, Any], previous: dict[str, Any] | None) -> tup
     return market, failures
 
 
+def parse_chartrow_pe(payload: str) -> dict[str, Any]:
+    """Extract Nasdaq-100 trailing and forward PE from ChartRow's public page."""
+    text = html.unescape(re.sub(r"<!--.*?-->|<[^>]+>", " ", payload, flags=re.S))
+    text = " ".join(text.split())
+    match = re.search(
+        r"Nasdaq-100 P/E ratio:\s*([0-9]+(?:\.[0-9]+)?)\s*\W+forward\s*([0-9]+(?:\.[0-9]+)?)",
+        text,
+        flags=re.I,
+    )
+    if not match:
+        raise ValueError("ChartRow PE values not found")
+    date_match = re.search(r"as of market close,\s*([A-Z][a-z]{2}\s+\d{1,2},\s+\d{4})", text)
+    if not date_match:
+        raise ValueError("ChartRow PE date not found")
+    try:
+        as_of = datetime.strptime(date_match.group(1), "%b %d, %Y").date().isoformat()
+    except ValueError as exc:
+        raise ValueError("ChartRow PE date is invalid") from exc
+    return {
+        "ttm_pe": float(match.group(1)),
+        "forward_pe": float(match.group(2)),
+        "as_of": as_of,
+    }
+
+
+def automatic_pe_metrics(config: dict[str, Any], now: datetime) -> tuple[dict[str, dict[str, Any]] | None, str | None]:
+    """Fetch current PE values while retaining configured historical percentile ranks."""
+    settings = config.get("automatic_inputs", {}).get("pe", {})
+    if settings.get("enabled", True) is False:
+        return None, None
+    url = str(settings.get("url") or DEFAULT_PE_SOURCE)
+    timeout = max(5, int(settings.get("timeout_seconds", 30)))
+    try:
+        response = requests.get(
+            url,
+            headers={"User-Agent": "Market-Pulse/1.0 (+https://github.com/maqianxiong/market-pulse)"},
+            timeout=timeout,
+        )
+        response.raise_for_status()
+        values = parse_chartrow_pe(response.text)
+        raw_inputs = config.get("manual_inputs", {})
+        metrics: dict[str, dict[str, Any]] = {}
+        for name in ("forward_pe", "ttm_pe"):
+            raw = raw_inputs.get(name, {})
+            percentile = finite_number(raw.get("percentile"))
+            percentile_note = f" ({raw.get('as_of')})" if raw.get("as_of") else ""
+            metrics[name] = {
+                "value": rounded(values[name]),
+                "percentile": rounded(percentile, 1),
+                "as_of": values["as_of"],
+                "source": f"ChartRow Nasdaq-100 P/E (automatic); percentile retained from config{percentile_note}",
+                "freshness_status": "fresh",
+                "percentile_window": raw.get("percentile_window") or "10Y",
+                "percentile_as_of": raw.get("as_of"),
+                "error": None,
+            }
+        return metrics, None
+    except Exception as exc:
+        return None, f"{type(exc).__name__}: {exc}"
+
+
 def manual_metric(name: str, raw: dict[str, Any], now: datetime) -> dict[str, Any]:
     value = finite_number(raw.get("value"))
     percentile = finite_number(raw.get("percentile"))
@@ -277,24 +340,24 @@ def manual_metric(name: str, raw: dict[str, Any], now: datetime) -> dict[str, An
     error = None
     if any(item is None for item in required):
         status = "unavailable"
-        error = "尚未在 config.json 中配置"
+        error = "灏氭湭鍦?config.json 涓厤缃?
     elif name in {"cnn_fear_greed", "naaim", "us10y_score", "forward_pe", "ttm_pe"}:
         check_value = percentile if name in {"forward_pe", "ttm_pe"} else value
         minimum, maximum = (-200, 200) if name == "naaim" else (0, 100)
         if check_value is not None and not minimum <= check_value <= maximum:
             status = "unavailable"
-            error = f"数值必须在 {minimum}–{maximum} 之间"
+            error = f"鏁板€煎繀椤诲湪 {minimum}鈥搟maximum} 涔嬮棿"
         elif as_of is not None:
             max_age = int(raw.get("max_age_days", 30))
             if (now.date() - as_of).days > max_age:
                 status = "stale"
         else:
-            error = "未填写数据日期"
+            error = "鏈～鍐欐暟鎹棩鏈?
     return {
         "value": rounded(value),
         "percentile": rounded(percentile, 1),
         "as_of": as_of.isoformat() if as_of else None,
-        "source": str(raw.get("source") or "手工配置"),
+        "source": str(raw.get("source") or "鎵嬪伐閰嶇疆"),
         "freshness_status": status,
         "percentile_window": raw.get("percentile_window"),
         "error": error,
@@ -368,7 +431,7 @@ def score_model(config: dict[str, Any], market: dict[str, Any], manual: dict[str
     ])
     total = rounded(total, 1)
     if total is None:
-        state = "数据不足"
+        state = "鏁版嵁涓嶈冻"
         multiplier = None
         tone = "unavailable"
     else:
@@ -395,14 +458,14 @@ def make_summary(model_result: dict[str, Any], market: dict[str, Any]) -> str:
     ndx = available(market["ndx"], "daily_return")
     spx = available(market["spx"], "daily_return")
     if ndx is not None and spx is not None:
-        lead = "科技股今日跑赢大盘" if ndx > spx else "大盘今日相对更强" if spx > ndx else "科技股与大盘表现接近"
+        lead = "绉戞妧鑲′粖鏃ヨ窇璧㈠ぇ鐩? if ndx > spx else "澶х洏浠婃棩鐩稿鏇村己" if spx > ndx else "绉戞妧鑲′笌澶х洏琛ㄧ幇鎺ヨ繎"
     else:
-        lead = "指数强弱暂无法完整比较"
+        lead = "鎸囨暟寮哄急鏆傛棤娉曞畬鏁存瘮杈?
     if model_result["score"] is None:
-        return f"{lead}；综合温度因配置项缺失暂不可用，请先查看数据状态。"
+        return f"{lead}锛涚患鍚堟俯搴﹀洜閰嶇疆椤圭己澶辨殏涓嶅彲鐢紝璇峰厛鏌ョ湅鏁版嵁鐘舵€併€?
     state = model_result["state"]
     multiplier = model_result["multiplier"]
-    return f"{lead}；市场处于{state}区间，模型参考定投倍率为 {multiplier:g}x。"
+    return f"{lead}锛涘競鍦哄浜巤state}鍖洪棿锛屾ā鍨嬪弬鑰冨畾鎶曞€嶇巼涓?{multiplier:g}x銆?
 
 
 def collect_alerts(config: dict[str, Any], market: dict[str, Any], manual: dict[str, Any], model_result: dict[str, Any]) -> list[str]:
@@ -414,23 +477,23 @@ def collect_alerts(config: dict[str, Any], market: dict[str, Any], manual: dict[
     naaim = available(manual["naaim"])
     yield_change = available(market["us10y"], "daily_change")
     if score is not None and score >= 80:
-        alerts.append("市场温度进入冰点区间")
+        alerts.append("甯傚満娓╁害杩涘叆鍐扮偣鍖洪棿")
     if vxn is not None and vxn > float(thresholds.get("vxn_high", 35)):
-        alerts.append(f"恐慌指数升至 {vxn:.1f}")
+        alerts.append(f"鎭愭厡鎸囨暟鍗囪嚦 {vxn:.1f}")
     if forward_pct is not None and forward_pct <= float(thresholds.get("forward_pe_percentile_low", 10)):
-        alerts.append("未来估值进入历史低分位")
+        alerts.append("鏈潵浼板€艰繘鍏ュ巻鍙蹭綆鍒嗕綅")
     if naaim is not None:
         if naaim <= float(thresholds.get("naaim_low", 20)):
-            alerts.append("机构仓位处于极低水平")
+            alerts.append("鏈烘瀯浠撲綅澶勪簬鏋佷綆姘村钩")
         elif naaim >= float(thresholds.get("naaim_high", 100)):
-            alerts.append("机构仓位处于极高水平")
+            alerts.append("鏈烘瀯浠撲綅澶勪簬鏋侀珮姘村钩")
     if yield_change is not None and yield_change <= float(thresholds.get("us10y_daily_drop_pct_points", -0.15)):
-        alerts.append("美债 10 年期收益率单日明显下行")
+        alerts.append("缇庡€?10 骞存湡鏀剁泭鐜囧崟鏃ユ槑鏄句笅琛?)
     drop_threshold = float(thresholds.get("index_drop_pct", -3))
-    for key, label in (("ndx", "纳指100"), ("spx", "标普500")):
+    for key, label in (("ndx", "绾虫寚100"), ("spx", "鏍囨櫘500")):
         change = available(market[key], "daily_return")
         if change is not None and change <= drop_threshold:
-            alerts.append(f"{label}单日下跌 {abs(change):.2f}%")
+            alerts.append(f"{label}鍗曟棩涓嬭穼 {abs(change):.2f}%")
     return alerts
 
 
@@ -459,6 +522,16 @@ def data_quality(market: dict[str, Any], manual: dict[str, Any]) -> str:
 def build_snapshot(config: dict[str, Any], now: datetime, previous: dict[str, Any] | None) -> dict[str, Any]:
     market, failures = fetch_market(config, previous)
     manual = parse_manual_inputs(config, now)
+    automatic_pe, pe_error = automatic_pe_metrics(config, now)
+    if automatic_pe:
+        manual.update(automatic_pe)
+    elif pe_error:
+        failures.append(f"PE: {pe_error}")
+        for name in ("forward_pe", "ttm_pe"):
+            metric = manual[name]
+            if metric.get("freshness_status") not in {"unavailable", "stale"}:
+                metric["freshness_status"] = "stale"
+                metric["error"] = pe_error
     model_result = score_model(config, market, manual)
     summary = make_summary(model_result, market)
     return {
@@ -534,13 +607,13 @@ def upsert_history(row: dict[str, Any], path: Path = HISTORY_PATH) -> list[dict[
     return ordered
 
 
-STATUS_LABELS = {"fresh": "最新", "manual": "手工", "stale": "已过期", "unavailable": "不可用"}
+STATUS_LABELS = {"fresh": "鏈€鏂?, "manual": "鎵嬪伐", "stale": "宸茶繃鏈?, "unavailable": "涓嶅彲鐢?}
 DIMENSION_META = {
-    "valuation": ("估值", "未来与当前估值的历史位置", "40%"),
-    "sentiment": ("情绪", "恐慌指数与市场情绪", "25%"),
-    "trend": ("趋势", "短期热度与长期均线", "20%"),
-    "positioning": ("资金", "机构仓位拥挤程度", "10%"),
-    "macro": ("宏观", "利率环境对成长股的支持度", "5%"),
+    "valuation": ("浼板€?, "鏈潵涓庡綋鍓嶄及鍊肩殑鍘嗗彶浣嶇疆", "40%"),
+    "sentiment": ("鎯呯华", "鎭愭厡鎸囨暟涓庡競鍦烘儏缁?, "25%"),
+    "trend": ("瓒嬪娍", "鐭湡鐑害涓庨暱鏈熷潎绾?, "20%"),
+    "positioning": ("璧勯噾", "鏈烘瀯浠撲綅鎷ユ尋绋嬪害", "10%"),
+    "macro": ("瀹忚", "鍒╃巼鐜瀵规垚闀胯偂鐨勬敮鎸佸害", "5%"),
 }
 
 
@@ -550,12 +623,12 @@ def esc(value: Any) -> str:
 
 def fmt(value: Any, digits: int = 1, suffix: str = "") -> str:
     number = finite_number(value)
-    return "—" if number is None else f"{number:.{digits}f}{suffix}"
+    return "鈥? if number is None else f"{number:.{digits}f}{suffix}"
 
 
 def fmt_change(value: Any) -> str:
     number = finite_number(value)
-    return "—" if number is None else f"{number:+.2f}%"
+    return "鈥? if number is None else f"{number:+.2f}%"
 
 
 def change_class(value: Any) -> str:
@@ -567,17 +640,17 @@ def freshness_badge(metric: dict[str, Any]) -> str:
     status = str(metric.get("freshness_status", "unavailable"))
     label = STATUS_LABELS.get(status, status)
     metadata = [metric.get("source"), metric.get("as_of"), metric.get("error")]
-    title = " · ".join(str(item) for item in metadata if item) or "暂无日期"
+    title = " 路 ".join(str(item) for item in metadata if item) or "鏆傛棤鏃ユ湡"
     return f'<span class="status {esc(status)}" title="{esc(title)}">{esc(label)}</span>'
 
 
 def market_cards(snapshot: dict[str, Any]) -> str:
     market = snapshot["market"]
     cards = [
-        ("纳指100", "ndx", fmt_change(market["ndx"].get("daily_return")), "今日"),
-        ("标普500", "spx", fmt_change(market["spx"].get("daily_return")), "今日"),
-        ("恐慌指数", "vxn", fmt(market["vxn"].get("value"), 1), f'{fmt(market["vxn"].get("percentile"), 0, "%")} 分位'),
-        ("美债10年", "us10y", fmt(market["us10y"].get("value"), 2, "%"), f'{fmt(market["us10y"].get("daily_change"), 2)} 点'),
+        ("绾虫寚100", "ndx", fmt_change(market["ndx"].get("daily_return")), "浠婃棩"),
+        ("鏍囨櫘500", "spx", fmt_change(market["spx"].get("daily_return")), "浠婃棩"),
+        ("鎭愭厡鎸囨暟", "vxn", fmt(market["vxn"].get("value"), 1), f'{fmt(market["vxn"].get("percentile"), 0, "%")} 鍒嗕綅'),
+        ("缇庡€?0骞?, "us10y", fmt(market["us10y"].get("value"), 2, "%"), f'{fmt(market["us10y"].get("daily_change"), 2)} 鐐?),
     ]
     parts = []
     for label, key, value, detail in cards:
@@ -587,7 +660,7 @@ def market_cards(snapshot: dict[str, Any]) -> str:
         <article class="market-card">
           <div class="card-head"><span>{esc(label)}</span>{freshness_badge(metric)}</div>
           <div class="market-value {change_class(trend_value)}">{esc(value)}</div>
-          <div class="market-detail">{esc(detail)} · {esc(metric.get('as_of') or '日期未知')}</div>
+          <div class="market-detail">{esc(detail)} 路 {esc(metric.get('as_of') or '鏃ユ湡鏈煡')}</div>
         </article>""")
     return "".join(parts)
 
@@ -595,12 +668,12 @@ def market_cards(snapshot: dict[str, Any]) -> str:
 def qqq_strip(snapshot: dict[str, Any]) -> str:
     metric = snapshot["market"]["qqq"]
     items = [
-        ("收盘", fmt(metric.get("value"), 2), "flat"),
-        ("今日", fmt_change(metric.get("daily_return")), change_class(metric.get("daily_return"))),
-        ("5日", fmt_change(metric.get("return_5d")), change_class(metric.get("return_5d"))),
-        ("20日", fmt_change(metric.get("return_20d")), change_class(metric.get("return_20d"))),
-        ("短期热度", fmt(metric.get("rsi"), 1), "flat"),
-        ("距 MA200", fmt(metric.get("ma200_dev"), 1, "%"), change_class(metric.get("ma200_dev"))),
+        ("鏀剁洏", fmt(metric.get("value"), 2), "flat"),
+        ("浠婃棩", fmt_change(metric.get("daily_return")), change_class(metric.get("daily_return"))),
+        ("5鏃?, fmt_change(metric.get("return_5d")), change_class(metric.get("return_5d"))),
+        ("20鏃?, fmt_change(metric.get("return_20d")), change_class(metric.get("return_20d"))),
+        ("鐭湡鐑害", fmt(metric.get("rsi"), 1), "flat"),
+        ("璺?MA200", fmt(metric.get("ma200_dev"), 1, "%"), change_class(metric.get("ma200_dev"))),
     ]
     values = "".join(
         f'<div><span>{esc(label)}</span><strong class="{css_class}">{esc(value)}</strong></div>'
@@ -608,7 +681,7 @@ def qqq_strip(snapshot: dict[str, Any]) -> str:
     )
     return (
         '<article class="qqq-strip"><div class="qqq-title"><div><strong>QQQ</strong>'
-        '<span>纳指100 ETF</span></div>' + freshness_badge(metric) + '</div>'
+        '<span>绾虫寚100 ETF</span></div>' + freshness_badge(metric) + '</div>'
         f'<div class="qqq-values">{values}</div></article>'
     )
 
@@ -619,10 +692,10 @@ def dimension_cards(snapshot: dict[str, Any]) -> str:
     for key, (label, explanation, weight) in DIMENSION_META.items():
         score = finite_number(scores.get(key))
         width = 0 if score is None else clamp(score)
-        value = "—" if score is None else f"{score:.1f}"
+        value = "鈥? if score is None else f"{score:.1f}"
         parts.append(f"""
         <article class="dimension-card">
-          <div class="card-head"><span>{esc(label)}</span><span class="weight">权重 {weight}</span></div>
+          <div class="card-head"><span>{esc(label)}</span><span class="weight">鏉冮噸 {weight}</span></div>
           <div class="dimension-value">{value}<small>/100</small></div>
           <div class="meter"><span style="width:{width:.1f}%"></span></div>
           <p>{esc(explanation)}</p>
@@ -633,16 +706,16 @@ def dimension_cards(snapshot: dict[str, Any]) -> str:
 def detail_rows(snapshot: dict[str, Any]) -> str:
     market, manual = snapshot["market"], snapshot["manual"]
     rows = [
-        ("未来估值", fmt(manual["forward_pe"].get("value"), 2), f'{fmt(manual["forward_pe"].get("percentile"), 0, "%")} · {manual["forward_pe"].get("percentile_window") or "窗口未填"}', manual["forward_pe"]),
-        ("当前估值", fmt(manual["ttm_pe"].get("value"), 2), f'{fmt(manual["ttm_pe"].get("percentile"), 0, "%")} · {manual["ttm_pe"].get("percentile_window") or "窗口未填"}', manual["ttm_pe"]),
-        ("市场情绪", fmt(manual["cnn_fear_greed"].get("value"), 0), "CNN Fear & Greed", manual["cnn_fear_greed"]),
-        ("机构仓位", fmt(manual["naaim"].get("value"), 1), "NAAIM Exposure Index", manual["naaim"]),
-        ("短期热度", fmt(market["qqq"].get("rsi"), 1), "QQQ RSI(14)", market["qqq"]),
-        ("长期趋势", fmt(market["qqq"].get("ma200_dev"), 1, "%"), "QQQ 距 MA200", market["qqq"]),
-        ("利率环境评分", fmt(manual["us10y_score"].get("value"), 0), "手工 0–100", manual["us10y_score"]),
+        ("鏈潵浼板€?, fmt(manual["forward_pe"].get("value"), 2), f'{fmt(manual["forward_pe"].get("percentile"), 0, "%")} 路 {manual["forward_pe"].get("percentile_window") or "绐楀彛鏈～"}', manual["forward_pe"]),
+        ("褰撳墠浼板€?, fmt(manual["ttm_pe"].get("value"), 2), f'{fmt(manual["ttm_pe"].get("percentile"), 0, "%")} 路 {manual["ttm_pe"].get("percentile_window") or "绐楀彛鏈～"}', manual["ttm_pe"]),
+        ("甯傚満鎯呯华", fmt(manual["cnn_fear_greed"].get("value"), 0), "CNN Fear & Greed", manual["cnn_fear_greed"]),
+        ("鏈烘瀯浠撲綅", fmt(manual["naaim"].get("value"), 1), "NAAIM Exposure Index", manual["naaim"]),
+        ("鐭湡鐑害", fmt(market["qqq"].get("rsi"), 1), "QQQ RSI(14)", market["qqq"]),
+        ("闀挎湡瓒嬪娍", fmt(market["qqq"].get("ma200_dev"), 1, "%"), "QQQ 璺?MA200", market["qqq"]),
+        ("鍒╃巼鐜璇勫垎", fmt(manual["us10y_score"].get("value"), 0), "鎵嬪伐 0鈥?00", manual["us10y_score"]),
     ]
     return "".join(
-        f'<div class="detail-row"><div><strong>{esc(label)}</strong><span>{esc(description)} · {esc(metric.get("source") or "来源未知")} · {esc(metric.get("as_of") or "日期未知")}</span></div>'
+        f'<div class="detail-row"><div><strong>{esc(label)}</strong><span>{esc(description)} 路 {esc(metric.get("source") or "鏉ユ簮鏈煡")} 路 {esc(metric.get("as_of") or "鏃ユ湡鏈煡")}</span></div>'
         f'<div class="detail-number">{esc(value)}</div>{freshness_badge(metric)}</div>'
         for label, value, description, metric in rows
     )
@@ -661,9 +734,9 @@ def chart_payload(history: list[dict[str, Any]]) -> str:
 def render_html(snapshot: dict[str, Any], history: list[dict[str, Any]], output: Path = SITE_PATH) -> None:
     model = snapshot["model"]
     score = model["score"]
-    score_text = "—" if score is None else f"{score:.1f}"
+    score_text = "鈥? if score is None else f"{score:.1f}"
     multiplier = model["multiplier"]
-    multiplier_text = "—" if multiplier is None else f"{multiplier:g}x"
+    multiplier_text = "鈥? if multiplier is None else f"{multiplier:g}x"
     failures = [*snapshot.get("fetch_failures", [])]
     failures.extend(
         f"{name}: {metric.get('error')}" for name, metric in snapshot["manual"].items()
@@ -672,13 +745,13 @@ def render_html(snapshot: dict[str, Any], history: list[dict[str, Any]], output:
     issue_html = ""
     if failures:
         items = "".join(f"<li>{esc(item)}</li>" for item in failures)
-        issue_html = f'<aside class="notice"><strong>数据提示</strong><ul>{items}</ul></aside>'
+        issue_html = f'<aside class="notice"><strong>鏁版嵁鎻愮ず</strong><ul>{items}</ul></aside>'
     alerts = snapshot.get("alerts", [])
     alert_html = ""
     if alerts:
-        alert_html = '<div class="alerts">' + "".join(f'<span>⚑ {esc(item)}</span>' for item in alerts) + "</div>"
+        alert_html = '<div class="alerts">' + "".join(f'<span>鈿?{esc(item)}</span>' for item in alerts) + "</div>"
     weights = snapshot["model_weights"]
-    weight_text = " · ".join(f"{DIMENSION_META[key][0]} {float(value) * 100:.0f}%" for key, value in weights.items())
+    weight_text = " 路 ".join(f"{DIMENSION_META[key][0]} {float(value) * 100:.0f}%" for key, value in weights.items())
 
     template = Template(r'''<!doctype html>
 <html lang="zh-CN">
@@ -686,8 +759,8 @@ def render_html(snapshot: dict[str, Any], history: list[dict[str, Any]], output:
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#edf3f8">
-  <meta name="description" content="Market Pulse：面向长期投资者的透明市场温度仪表盘">
-  <title>Market Pulse · $report_date</title>
+  <meta name="description" content="Market Pulse锛氶潰鍚戦暱鏈熸姇璧勮€呯殑閫忔槑甯傚満娓╁害浠〃鐩?>
+  <title>Market Pulse 路 $report_date</title>
   <style>
     :root{--ink:#12202f;--muted:#687889;--line:#dbe5ec;--panel:rgba(255,255,255,.88);--blue:#1769e0;--green:#16876c;--red:#dc4a58;--amber:#c77812;--shadow:0 18px 50px rgba(42,65,82,.09);--radius:22px}
     *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;color:var(--ink);background:radial-gradient(circle at 85% -10%,#d9eafe 0,transparent 32rem),linear-gradient(150deg,#f5f8fa,#eaf1f6);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;min-height:100vh}
@@ -706,22 +779,22 @@ def render_html(snapshot: dict[str, Any], history: list[dict[str, Any]], output:
 </head>
 <body>
   <main class="shell">
-    <header class="topbar"><div class="brand"><i></i>Market Pulse</div><div class="meta">数据日 $report_date<br>生成于 $generated_at</div></header>
+    <header class="topbar"><div class="brand"><i></i>Market Pulse</div><div class="meta">鏁版嵁鏃?$report_date<br>鐢熸垚浜?$generated_at</div></header>
     <section class="hero">
       <div class="hero-grid">
-        <div><div class="eyebrow">Market temperature · 市场温度</div><div class="score-line"><strong class="score">$score</strong><span class="score-unit">/ 100</span><span class="state">$state</span></div><p class="summary">$summary</p></div>
-        <div class="allocation"><span>模型参考定投倍率</span><strong>$multiplier</strong><small>先结论，再看原因</small></div>
+        <div><div class="eyebrow">Market temperature 路 甯傚満娓╁害</div><div class="score-line"><strong class="score">$score</strong><span class="score-unit">/ 100</span><span class="state">$state</span></div><p class="summary">$summary</p></div>
+        <div class="allocation"><span>妯″瀷鍙傝€冨畾鎶曞€嶇巼</span><strong>$multiplier</strong><small>鍏堢粨璁猴紝鍐嶇湅鍘熷洜</small></div>
       </div>
       $alerts
     </section>
     $issues
-    <section><div class="section-head"><h2>今日市场</h2><p>红涨绿跌 · 收盘行情</p></div><div class="market-grid">$market_cards</div>$qqq_strip</section>
-    <section><div class="section-head"><h2>五个维度</h2><p>分数越高，逆向配置吸引力越高</p></div><div class="dimension-grid">$dimension_cards</div></section>
+    <section><div class="section-head"><h2>浠婃棩甯傚満</h2><p>绾㈡定缁胯穼 路 鏀剁洏琛屾儏</p></div><div class="market-grid">$market_cards</div>$qqq_strip</section>
+    <section><div class="section-head"><h2>浜斾釜缁村害</h2><p>鍒嗘暟瓒婇珮锛岄€嗗悜閰嶇疆鍚稿紩鍔涜秺楂?/p></div><div class="dimension-grid">$dimension_cards</div></section>
     <section class="lower-grid">
-      <article class="chart-card"><div class="section-head"><h2>历史温度</h2><p>最近 180 个有效记录</p></div><div class="chart-wrap"><canvas id="historyChart" aria-label="市场温度历史曲线"></canvas><div class="chart-empty" id="chartEmpty">积累第二个有效交易日后显示趋势</div></div><div class="chart-legend"><span><i style="background:#1b78d0"></i>市场温度</span><span><i style="background:#e7bb71"></i>正常区间 50–65</span></div></article>
-      <article class="detail-card"><div class="section-head"><h2>指标状态</h2><p>不隐藏缺失与过期</p></div>$detail_rows<details><summary>查看透明模型权重</summary><div class="formula">$weight_text<br>温度越高表示估值、情绪、趋势、仓位与利率环境的逆向吸引力越高。缺少任一维度时不强行计算总分。</div></details></article>
+      <article class="chart-card"><div class="section-head"><h2>鍘嗗彶娓╁害</h2><p>鏈€杩?180 涓湁鏁堣褰?/p></div><div class="chart-wrap"><canvas id="historyChart" aria-label="甯傚満娓╁害鍘嗗彶鏇茬嚎"></canvas><div class="chart-empty" id="chartEmpty">绉疮绗簩涓湁鏁堜氦鏄撴棩鍚庢樉绀鸿秼鍔?/div></div><div class="chart-legend"><span><i style="background:#1b78d0"></i>甯傚満娓╁害</span><span><i style="background:#e7bb71"></i>姝ｅ父鍖洪棿 50鈥?5</span></div></article>
+      <article class="detail-card"><div class="section-head"><h2>鎸囨爣鐘舵€?/h2><p>涓嶉殣钘忕己澶变笌杩囨湡</p></div>$detail_rows<details><summary>鏌ョ湅閫忔槑妯″瀷鏉冮噸</summary><div class="formula">$weight_text<br>娓╁害瓒婇珮琛ㄧず浼板€笺€佹儏缁€佽秼鍔裤€佷粨浣嶄笌鍒╃巼鐜鐨勯€嗗悜鍚稿紩鍔涜秺楂樸€傜己灏戜换涓€缁村害鏃朵笉寮鸿璁＄畻鎬诲垎銆?/div></details></article>
     </section>
-    <footer><strong>数据说明</strong><br>行情来自 Yahoo Finance；估值、CNN 市场情绪、NAAIM 与利率环境评分来自 config.json 手工配置，页面会标明新鲜度。VXN 分位使用最多 756 个最近交易日。<br><br><strong>免责声明</strong><br>本站仅作个人研究和记录，模型倍率不是买卖指令，不构成任何投资建议。市场有风险，请独立判断。</footer>
+    <footer><strong>鏁版嵁璇存槑</strong><br>琛屾儏鏉ヨ嚜 Yahoo Finance锛涗及鍊笺€丆NN 甯傚満鎯呯华銆丯AAIM 涓庡埄鐜囩幆澧冭瘎鍒嗘潵鑷?config.json 鎵嬪伐閰嶇疆锛岄〉闈細鏍囨槑鏂伴矞搴︺€俈XN 鍒嗕綅浣跨敤鏈€澶?756 涓渶杩戜氦鏄撴棩銆?br><br><strong>鍏嶈矗澹版槑</strong><br>鏈珯浠呬綔涓汉鐮旂┒鍜岃褰曪紝妯″瀷鍊嶇巼涓嶆槸涔板崠鎸囦护锛屼笉鏋勬垚浠讳綍鎶曡祫寤鸿銆傚競鍦烘湁椋庨櫓锛岃鐙珛鍒ゆ柇銆?/footer>
   </main>
   <script>
   (()=>{const data=$chart_data,canvas=document.getElementById('historyChart'),empty=document.getElementById('chartEmpty');if(data.length<2)return;empty.hidden=true;const ctx=canvas.getContext('2d'),dpr=Math.min(devicePixelRatio||1,2);function draw(){const box=canvas.getBoundingClientRect(),w=Math.max(280,box.width),h=Math.max(180,box.height);canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);const p={l:34,r:12,t:16,b:25},cw=w-p.l-p.r,ch=h-p.t-p.b,x=i=>p.l+i/(data.length-1)*cw,y=v=>p.t+(100-v)/100*ch;ctx.fillStyle='rgba(224,164,69,.08)';ctx.fillRect(p.l,y(65),cw,y(50)-y(65));ctx.strokeStyle='rgba(61,82,98,.11)';ctx.lineWidth=1;ctx.font='10px -apple-system,sans-serif';ctx.fillStyle='#82909c';ctx.textAlign='right';[0,20,40,60,80,100].forEach(v=>{ctx.beginPath();ctx.moveTo(p.l,y(v));ctx.lineTo(w-p.r,y(v));ctx.stroke();ctx.fillText(v,p.l-8,y(v)+3)});const grad=ctx.createLinearGradient(0,p.t,0,h-p.b);grad.addColorStop(0,'rgba(23,105,224,.22)');grad.addColorStop(1,'rgba(23,105,224,0)');ctx.beginPath();data.forEach((v,i)=>i?ctx.lineTo(x(i),y(v.score)):ctx.moveTo(x(i),y(v.score)));ctx.lineTo(x(data.length-1),h-p.b);ctx.lineTo(x(0),h-p.b);ctx.closePath();ctx.fillStyle=grad;ctx.fill();ctx.beginPath();data.forEach((v,i)=>i?ctx.lineTo(x(i),y(v.score)):ctx.moveTo(x(i),y(v.score)));ctx.strokeStyle='#1769e0';ctx.lineWidth=2.2;ctx.lineJoin='round';ctx.stroke();ctx.fillStyle='#687889';ctx.textAlign='left';ctx.fillText(data[0].date.slice(5),p.l,h-5);ctx.textAlign='right';ctx.fillText(data.at(-1).date.slice(5),w-p.r,h-5)}draw();new ResizeObserver(draw).observe(canvas)})();
@@ -752,25 +825,27 @@ def render_html(snapshot: dict[str, Any], history: list[dict[str, Any]], output:
 
 def notification_markdown(snapshot: dict[str, Any]) -> tuple[str, str]:
     model, market = snapshot["model"], snapshot["market"]
-    score = "不可用" if model["score"] is None else f'{model["score"]:.1f}（{model["state"]}）'
-    multiplier = "不可用" if model["multiplier"] is None else f'{model["multiplier"]:g}x'
-    title = f'Market Pulse｜{snapshot["report_date"]}｜{model["state"]}'
+    score = "涓嶅彲鐢? if model["score"] is None else f'{model["score"]:.1f}锛坽model["state"]}锛?
+    multiplier = "涓嶅彲鐢? if model["multiplier"] is None else f'{model["multiplier"]:g}x'
+    title = f'Market Pulse锝渰snapshot["report_date"]}锝渰model["state"]}'
     lines = [
-        f'## 市场温度：{score}',
-        f'**模型参考定投倍率：{multiplier}**',
+        f'## 甯傚満娓╁害锛歿score}',
+        f'**妯″瀷鍙傝€冨畾鎶曞€嶇巼锛歿multiplier}**',
         '',
-        f'- 纳指100：{fmt_change(market["ndx"].get("daily_return"))}',
-        f'- 标普500：{fmt_change(market["spx"].get("daily_return"))}',
-        f'- 恐慌指数：{fmt(market["vxn"].get("value"), 1)}',
-        f'- 美债10年：{fmt(market["us10y"].get("value"), 2, "%")}',
-        f'- QQQ 短期热度：{fmt(market["qqq"].get("rsi"), 0)}',
+        f'- 绾虫寚100锛歿fmt_change(market["ndx"].get("daily_return"))}',
+        f'- 鏍囨櫘500锛歿fmt_change(market["spx"].get("daily_return"))}',
+        f'- 鎭愭厡鎸囨暟锛歿fmt(market["vxn"].get("value"), 1)}',
+        f'- 缇庡€?0骞达細{fmt(market["us10y"].get("value"), 2, "%")}',
+        f'- QQQ 鐭湡鐑害锛歿fmt(market["qqq"].get("rsi"), 0)}',
         '',
+        f'- Nasdaq-100 Forward PE: {fmt(snapshot["manual"]["forward_pe"].get("value"), 2)}',
+        f'- Nasdaq-100 TTM PE: {fmt(snapshot["manual"]["ttm_pe"].get("value"), 2)}',
         snapshot["summary"],
     ]
     if snapshot["alerts"]:
-        lines.extend(['', '**事件提醒**', *[f'- {item}' for item in snapshot["alerts"]]])
+        lines.extend(['', '**浜嬩欢鎻愰啋**', *[f'- {item}' for item in snapshot["alerts"]]])
     unavailable = [
-        f'{metric.get("ticker", name)}（{metric.get("error") or "不可用"}）'
+        f'{metric.get("ticker", name)}锛坽metric.get("error") or "涓嶅彲鐢?}锛?
         for group in (snapshot["market"], snapshot["manual"])
         for name, metric in group.items()
         if metric.get("freshness_status") == "unavailable"
@@ -780,48 +855,57 @@ def notification_markdown(snapshot: dict[str, Any]) -> tuple[str, str]:
         for name, metric in group.items() if metric.get("freshness_status") == "stale"
     ]
     if unavailable:
-        lines.extend(['', '**不可用项**', *[f'- {item}' for item in unavailable]])
+        lines.extend(['', '**涓嶅彲鐢ㄩ」**', *[f'- {item}' for item in unavailable]])
     if stale:
-        lines.extend(['', f'过期/回退数据：{"、".join(stale)}'])
-    lines.extend(['', '> 仅作个人研究和记录，不构成投资建议。'])
+        lines.extend(['', f'杩囨湡/鍥為€€鏁版嵁锛歿"銆?.join(stale)}'])
+    lines.extend(['', '> 浠呬綔涓汉鐮旂┒鍜岃褰曪紝涓嶆瀯鎴愭姇璧勫缓璁€?])
     return title, '\n'.join(lines)
 
 
 def send_serverchan(snapshot: dict[str, Any], sendkey: str | None) -> bool | None:
     if not sendkey:
-        print("未设置 SERVERCHAN_SENDKEY，跳过微信推送。")
+        print("鏈缃?SERVERCHAN_SENDKEY锛岃烦杩囧井淇℃帹閫併€?)
         return None
     title, description = notification_markdown(snapshot)
     try:
+        if "\n" in title or "\r" in title:
+            raise ValueError("ServerChan title must not contain newlines")
+        endpoint = f"https://sctapi.ftqq.com/{sendkey}.send"
+        if sendkey.lower().startswith("sctp"):
+            uid_match = re.match(r"sctp(\d+)t", sendkey, flags=re.I)
+            if uid_match:
+                endpoint = f"https://{uid_match.group(1)}.push.ft07.com/send/{sendkey}.send"
         response = requests.post(
-            f"https://sctapi.ftqq.com/{sendkey}.send",
+            endpoint,
             data={"title": title, "desp": description},
             timeout=20,
         )
         response.raise_for_status()
         payload = response.json()
-        if payload.get("code") not in (0, None):
-            raise RuntimeError(payload.get("message") or payload.get("data") or "Server酱返回失败")
-        print("Server酱推送成功。")
+        code = payload.get("code")
+        if str(code) != "0":
+            raise RuntimeError(payload.get("message") or payload.get("data") or "Server閰辫繑鍥炲け璐?)
+        message = str(payload.get("message") or "accepted")
+        print(f"ServerChan accepted: code={code}, message={message}")
         return True
     except Exception as exc:
-        print(f"警告：Server酱推送失败：{type(exc).__name__}: {exc}", file=sys.stderr)
+        print(f"璀﹀憡锛歋erver閰辨帹閫佸け璐ワ細{type(exc).__name__}: {exc}", file=sys.stderr)
         return False
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="生成 Market Pulse 静态仪表盘")
-    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="配置文件路径")
-    parser.add_argument("--no-push", action="store_true", help="即使存在 SendKey 也不推送")
+    parser = argparse.ArgumentParser(description="鐢熸垚 Market Pulse 闈欐€佷华琛ㄧ洏")
+    parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG, help="閰嶇疆鏂囦欢璺緞")
+    parser.add_argument("--no-push", action="store_true", help="鍗充娇瀛樺湪 SendKey 涔熶笉鎺ㄩ€?)
     args = parser.parse_args(argv)
     config = load_json(args.config)
     if not isinstance(config, dict):
-        print(f"错误：无法读取配置文件 {args.config}", file=sys.stderr)
+        print(f"閿欒锛氭棤娉曡鍙栭厤缃枃浠?{args.config}", file=sys.stderr)
         return 2
     try:
         validate_config(config)
     except (KeyError, TypeError, ValueError) as exc:
-        print(f"错误：配置无效：{exc}", file=sys.stderr)
+        print(f"閿欒锛氶厤缃棤鏁堬細{exc}", file=sys.stderr)
         return 2
     now = get_now(str(config.get("timezone", "Asia/Shanghai")))
     previous = load_json(LATEST_PATH, {})
@@ -829,9 +913,9 @@ def main(argv: list[str] | None = None) -> int:
     history = upsert_history(snapshot_to_row(snapshot))
     save_json(LATEST_PATH, snapshot)
     render_html(snapshot, history)
-    print(f"已生成 {SITE_PATH.relative_to(ROOT)}，数据日 {snapshot['report_date']}，质量 {snapshot['data_quality']}。")
+    print(f"宸茬敓鎴?{SITE_PATH.relative_to(ROOT)}锛屾暟鎹棩 {snapshot['report_date']}锛岃川閲?{snapshot['data_quality']}銆?)
     if snapshot["fetch_failures"]:
-        print("行情失败项：" + "；".join(snapshot["fetch_failures"]), file=sys.stderr)
+        print("琛屾儏澶辫触椤癸細" + "锛?.join(snapshot["fetch_failures"]), file=sys.stderr)
     if not args.no_push:
         send_serverchan(snapshot, os.environ.get("SERVERCHAN_SENDKEY"))
     return 0
