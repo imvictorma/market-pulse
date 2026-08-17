@@ -1,61 +1,61 @@
 {
-  "report_date": "2026-08-14",
-  "generated_at": "2026-08-15T16:36:46+08:00",
+  "report_date": "2026-08-17",
+  "generated_at": "2026-08-18T07:44:14+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
       "ticker": "^NDX",
-      "value": 30046.14,
-      "daily_return": -0.13,
-      "as_of": "2026-08-14",
+      "value": 29995.38,
+      "daily_return": -0.17,
+      "as_of": "2026-08-17",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null
     },
     "spx": {
       "ticker": "^GSPC",
-      "value": 7785.76,
-      "daily_return": -0.17,
-      "as_of": "2026-08-14",
+      "value": 7745.06,
+      "daily_return": -0.52,
+      "as_of": "2026-08-17",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null
     },
     "qqq": {
       "ticker": "QQQ",
-      "value": 731.07,
-      "daily_return": -0.14,
-      "as_of": "2026-08-14",
+      "value": 729.87,
+      "daily_return": -0.16,
+      "as_of": "2026-08-17",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "return_5d": 1.11,
-      "return_20d": 5.14,
-      "rsi": 59.57,
-      "ma200": 650.62,
-      "ma200_dev": 12.37
+      "return_5d": 1.25,
+      "return_20d": 4.86,
+      "rsi": 58.88,
+      "ma200": 651.1,
+      "ma200_dev": 12.1
     },
     "vxn": {
       "ticker": "^VXN",
-      "value": 20.72,
-      "daily_return": -2.4,
-      "as_of": "2026-08-14",
+      "value": 21.51,
+      "daily_return": 3.81,
+      "as_of": "2026-08-17",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": -0.51,
-      "percentile": 50.9,
+      "daily_change": 0.79,
+      "percentile": 56.9,
       "percentile_window": "756 个交易日"
     },
     "us10y": {
       "ticker": "^TNX",
-      "value": 4.7,
-      "daily_return": 1.19,
-      "as_of": "2026-08-14",
+      "value": 4.72,
+      "daily_return": 0.6,
+      "as_of": "2026-08-17",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": 0.055,
+      "daily_change": 0.028,
       "unit": "%"
     }
   },
@@ -81,8 +81,8 @@
       "error": null
     },
     "cnn_fear_greed": {
-      "value": 64.9714285714286,
-      "as_of": "2026-08-14",
+      "value": 59.9714285714286,
+      "as_of": "2026-08-17",
       "rating": "greed",
       "source": "CNN Fear & Greed public API",
       "freshness_status": "fresh",
@@ -90,28 +90,28 @@
     },
     "naaim": {
       "value": 77.34,
-      "as_of": "2026-08-15",
+      "as_of": "2026-08-18",
       "source": "NAAIM official embeddable number (retrieved)",
       "freshness_status": "fresh",
       "error": null
     },
     "us10y_score": {
       "value": 35.0,
-      "as_of": "2026-08-14",
-      "source": "^TNX 自动评分（当前 4.70%）",
+      "as_of": "2026-08-17",
+      "source": "^TNX 自动评分（当前 4.72%）",
       "freshness_status": "fresh",
       "error": null
     }
   },
   "model": {
-    "score": 39.3,
+    "score": 40.8,
     "state": "偏热",
     "multiplier": 0.6,
     "tone": "warm",
     "dimensions": {
       "valuation": 40.3,
-      "sentiment": 44.6,
-      "trend": 40.2,
+      "sentiment": 50.2,
+      "trend": 40.6,
       "positioning": 22.7,
       "macro": 35.0
     },
