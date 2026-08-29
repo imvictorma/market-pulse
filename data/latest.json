@@ -1,6 +1,6 @@
 {
-  "report_date": "2026-08-27",
-  "generated_at": "2026-08-28T14:59:05+08:00",
+  "report_date": "2026-08-28",
+  "generated_at": "2026-08-29T12:14:29+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
@@ -49,13 +49,13 @@
     },
     "us10y": {
       "ticker": "^TNX",
-      "value": 4.67,
-      "daily_return": 0.17,
-      "as_of": "2026-08-27",
+      "value": 4.72,
+      "daily_return": 1.03,
+      "as_of": "2026-08-28",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": 0.008,
+      "daily_change": 0.048,
       "unit": "%"
     }
   },
@@ -64,7 +64,7 @@
       "value": 20.1,
       "percentile": 37.5,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
@@ -74,43 +74,43 @@
       "value": 30.8,
       "percentile": 96.7,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
       "error": "ValueError: ChartRow PE values not found"
     },
     "cnn_fear_greed": {
-      "value": 58.0571428571429,
+      "value": 54.4285714285714,
       "as_of": "2026-08-28",
-      "rating": "greed",
+      "rating": "neutral",
       "source": "CNN Fear & Greed public API",
       "freshness_status": "fresh",
       "error": null
     },
     "naaim": {
       "value": 98.39,
-      "as_of": "2026-08-28",
+      "as_of": "2026-08-29",
       "source": "NAAIM official embeddable number (retrieved)",
       "freshness_status": "fresh",
       "error": null
     },
     "us10y_score": {
       "value": 35.0,
-      "as_of": "2026-08-27",
-      "source": "^TNX 自动评分（当前 4.67%）",
+      "as_of": "2026-08-28",
+      "source": "^TNX 自动评分（当前 4.72%）",
       "freshness_status": "fresh",
       "error": null
     }
   },
   "model": {
-    "score": 37.7,
+    "score": 38.0,
     "state": "偏热",
     "multiplier": 0.6,
     "tone": "warm",
     "dimensions": {
       "valuation": 40.3,
-      "sentiment": 44.5,
+      "sentiment": 45.9,
       "trend": 42.6,
       "positioning": 1.6,
       "macro": 35.0
