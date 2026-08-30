@@ -1,5 +1,10 @@
 # Market Pulse
 
+[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-2ea44f)](https://maqianxiong.github.io/market-pulse/)
+[![Daily Update](https://github.com/maqianxiong/market-pulse/actions/workflows/daily.yml/badge.svg)](https://github.com/maqianxiong/market-pulse/actions/workflows/daily.yml)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 Market Pulse 是一个面向长期投资者的纳斯达克 100 市场温度仪表盘。它在美股收盘后自动拉取行情，计算透明的五维温度模型，生成移动端优先的静态网页，并可通过 Server酱推送到微信。
 
 它不是涨跌预测器。温度越高，表示估值、情绪、趋势、仓位与利率环境的“逆向配置吸引力”越高；页面中的定投倍率只是模型输出，不构成投资建议。
