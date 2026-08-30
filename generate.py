@@ -421,7 +421,7 @@ def automatic_pe_metrics(
         response = request_with_retries(
             "GET",
             url,
-            headers={"User-Agent": "Market-Pulse/1.0 (+https://github.com/maqianxiong/market-pulse)"},
+            headers={"User-Agent": "Market-Pulse/1.0 (+https://github.com/imvictorma/market-pulse)"},
             timeout=timeout,
             retries=settings.get("retries", DEFAULT_HTTP_RETRIES),
             backoff_seconds=settings.get("backoff_seconds", DEFAULT_HTTP_BACKOFF_SECONDS),
