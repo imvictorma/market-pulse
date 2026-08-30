@@ -1,6 +1,6 @@
 # Market Pulse
 
-**English** | [简体中文](README.zh-cn.md)
+**English** · [中文](README.zh-CN.md)
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-2ea44f)](https://imvictorma.github.io/market-pulse/)
 [![Daily Update](https://github.com/imvictorma/market-pulse/actions/workflows/daily.yml/badge.svg)](https://github.com/imvictorma/market-pulse/actions/workflows/daily.yml)
