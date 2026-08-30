@@ -1,7 +1,7 @@
 # Market Pulse
 
-[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-2ea44f)](https://maqianxiong.github.io/market-pulse/)
-[![Daily Update](https://github.com/maqianxiong/market-pulse/actions/workflows/daily.yml/badge.svg)](https://github.com/maqianxiong/market-pulse/actions/workflows/daily.yml)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-GitHub_Pages-2ea44f)](https://imvictorma.github.io/market-pulse/)
+[![Daily Update](https://github.com/imvictorma/market-pulse/actions/workflows/daily.yml/badge.svg)](https://github.com/imvictorma/market-pulse/actions/workflows/daily.yml)
 [![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
