@@ -1,6 +1,6 @@
 {
   "report_date": "2026-09-04",
-  "generated_at": "2026-09-05T09:10:36+08:00",
+  "generated_at": "2026-09-08T09:16:07+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
@@ -23,17 +23,17 @@
     },
     "qqq": {
       "ticker": "QQQ",
-      "value": 717.67,
-      "daily_return": 1.19,
-      "as_of": "2026-09-03",
+      "value": 718.96,
+      "daily_return": 0.18,
+      "as_of": "2026-09-04",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "return_5d": -0.48,
-      "return_20d": 0.42,
-      "rsi": 52.85,
-      "ma200": 657.13,
-      "ma200_dev": 9.21
+      "return_5d": 0.35,
+      "return_20d": -0.56,
+      "rsi": 53.62,
+      "ma200": 657.71,
+      "ma200_dev": 9.31
     },
     "vxn": {
       "ticker": "^VXN",
@@ -64,7 +64,7 @@
       "value": 20.1,
       "percentile": 37.5,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
@@ -74,7 +74,7 @@
       "value": 30.8,
       "percentile": 96.7,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
@@ -90,7 +90,7 @@
     },
     "naaim": {
       "value": 86.82,
-      "as_of": "2026-09-05",
+      "as_of": "2026-09-08",
       "source": "NAAIM official embeddable number (retrieved)",
       "freshness_status": "fresh",
       "error": null
@@ -104,14 +104,14 @@
     }
   },
   "model": {
-    "score": 42.4,
+    "score": 42.3,
     "state": "偏热",
     "multiplier": 0.6,
     "tone": "warm",
     "dimensions": {
       "valuation": 40.3,
       "sentiment": 49.8,
-      "trend": 53.6,
+      "trend": 53.2,
       "positioning": 13.2,
       "macro": 35.0
     },
