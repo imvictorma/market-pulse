@@ -1,22 +1,22 @@
 {
-  "report_date": "2026-09-16",
-  "generated_at": "2026-09-17T09:33:53+08:00",
+  "report_date": "2026-09-17",
+  "generated_at": "2026-09-18T09:21:27+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
       "ticker": "^NDX",
-      "value": 28945.06,
-      "daily_return": 0.02,
-      "as_of": "2026-09-16",
+      "value": 29446.98,
+      "daily_return": 1.73,
+      "as_of": "2026-09-17",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null
     },
     "spx": {
       "ticker": "^GSPC",
-      "value": 7551.81,
-      "daily_return": -0.45,
-      "as_of": "2026-09-16",
+      "value": 7637.76,
+      "daily_return": 1.14,
+      "as_of": "2026-09-17",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null
@@ -37,25 +37,25 @@
     },
     "vxn": {
       "ticker": "^VXN",
-      "value": 22.44,
-      "daily_return": 0.81,
-      "as_of": "2026-09-16",
+      "value": 19.96,
+      "daily_return": -11.05,
+      "as_of": "2026-09-17",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": 0.18,
-      "percentile": 64.4,
+      "daily_change": -2.48,
+      "percentile": 41.7,
       "percentile_window": "756 个交易日"
     },
     "us10y": {
       "ticker": "^TNX",
-      "value": 5.01,
-      "daily_return": 0.2,
-      "as_of": "2026-09-16",
+      "value": 4.95,
+      "daily_return": -1.18,
+      "as_of": "2026-09-17",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": 0.01,
+      "daily_change": -0.059,
       "unit": "%"
     }
   },
@@ -64,7 +64,7 @@
       "value": 20.1,
       "percentile": 37.5,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
@@ -74,46 +74,46 @@
       "value": 30.8,
       "percentile": 96.7,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
       "error": "ValueError: ChartRow PE values not found"
     },
     "cnn_fear_greed": {
-      "value": 26.4857142857143,
-      "as_of": "2026-09-16",
+      "value": 28.6857142857143,
+      "as_of": "2026-09-17",
       "rating": "fear",
       "source": "CNN Fear & Greed public API",
       "freshness_status": "fresh",
       "error": null
     },
     "naaim": {
-      "value": 79.27,
-      "as_of": "2026-09-17",
+      "value": 92.83,
+      "as_of": "2026-09-18",
       "source": "NAAIM official embeddable number (retrieved)",
       "freshness_status": "fresh",
       "error": null
     },
     "us10y_score": {
-      "value": 20.0,
-      "as_of": "2026-09-16",
-      "source": "^TNX 自动评分（当前 5.01%）",
+      "value": 35.0,
+      "as_of": "2026-09-17",
+      "source": "^TNX 自动评分（当前 4.95%）",
       "freshness_status": "fresh",
       "error": null
     }
   },
   "model": {
-    "score": 47.8,
+    "score": 43.5,
     "state": "偏热",
     "multiplier": 0.6,
     "tone": "warm",
     "dimensions": {
       "valuation": 40.3,
-      "sentiment": 68.0,
+      "sentiment": 53.5,
       "trend": 57.9,
-      "positioning": 20.7,
-      "macro": 20.0
+      "positioning": 7.2,
+      "macro": 35.0
     },
     "ma200_score": 60.0,
     "missing_dimensions": []
