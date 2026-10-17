@@ -1,22 +1,22 @@
 {
-  "report_date": "2026-10-15",
-  "generated_at": "2026-10-16T09:32:47+08:00",
+  "report_date": "2026-10-16",
+  "generated_at": "2026-10-17T09:23:34+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
       "ticker": "^NDX",
-      "value": 29935.59,
-      "daily_return": -0.05,
-      "as_of": "2026-10-15",
+      "value": 29187.55,
+      "daily_return": -2.5,
+      "as_of": "2026-10-16",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null
     },
     "spx": {
       "ticker": "^GSPC",
-      "value": 7744.06,
-      "daily_return": 0.33,
-      "as_of": "2026-10-15",
+      "value": 7659.44,
+      "daily_return": -1.09,
+      "as_of": "2026-10-16",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null
@@ -49,13 +49,13 @@
     },
     "us10y": {
       "ticker": "^TNX",
-      "value": 5.09,
-      "daily_return": -1.95,
-      "as_of": "2026-10-15",
+      "value": 5.1,
+      "daily_return": 0.18,
+      "as_of": "2026-10-16",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": -0.101,
+      "daily_change": 0.009,
       "unit": "%"
     }
   },
@@ -64,7 +64,7 @@
       "value": 20.1,
       "percentile": 37.5,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
@@ -74,43 +74,43 @@
       "value": 30.8,
       "percentile": 96.7,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
       "error": "ValueError: ChartRow PE values not found"
     },
     "cnn_fear_greed": {
-      "value": 31.5428571428571,
-      "as_of": "2026-10-15",
-      "rating": "fear",
+      "value": 17.9383219954649,
+      "as_of": "2026-10-16",
+      "rating": "extreme fear",
       "source": "CNN Fear & Greed public API",
       "freshness_status": "fresh",
       "error": null
     },
     "naaim": {
       "value": 95.64,
-      "as_of": "2026-10-16",
+      "as_of": "2026-10-17",
       "source": "NAAIM official embeddable number (retrieved)",
       "freshness_status": "fresh",
       "error": null
     },
     "us10y_score": {
       "value": 20.0,
-      "as_of": "2026-10-15",
-      "source": "^TNX 自动评分（当前 5.09%）",
+      "as_of": "2026-10-16",
+      "source": "^TNX 自动评分（当前 5.10%）",
       "freshness_status": "fresh",
       "error": null
     }
   },
   "model": {
-    "score": 46.4,
+    "score": 47.7,
     "state": "偏热",
     "multiplier": 0.6,
     "tone": "warm",
     "dimensions": {
       "valuation": 40.3,
-      "sentiment": 68.8,
+      "sentiment": 74.2,
       "trend": 58.0,
       "positioning": 4.4,
       "macro": 20.0
