@@ -1,61 +1,61 @@
 {
-  "report_date": "2026-11-19",
-  "generated_at": "2026-11-20T12:07:22+08:00",
+  "report_date": "2026-11-20",
+  "generated_at": "2026-11-21T12:06:56+08:00",
   "timezone": "Asia/Shanghai",
   "market": {
     "ndx": {
       "ticker": "^NDX",
-      "value": 26517.05,
-      "daily_return": -2.21,
-      "as_of": "2026-11-19",
+      "value": 25028.98,
+      "daily_return": -5.61,
+      "as_of": "2026-11-20",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null
     },
     "spx": {
       "ticker": "^GSPC",
-      "value": 7175.83,
-      "daily_return": -2.02,
-      "as_of": "2026-11-19",
+      "value": 6910.39,
+      "daily_return": -3.7,
+      "as_of": "2026-11-20",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null
     },
     "qqq": {
       "ticker": "QQQ",
-      "value": 645.04,
-      "daily_return": -2.19,
-      "as_of": "2026-11-19",
+      "value": 608.45,
+      "daily_return": -5.67,
+      "as_of": "2026-11-20",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "return_5d": -6.27,
-      "return_20d": -8.44,
-      "rsi": 33.91,
-      "ma200": 683.0,
-      "ma200_dev": -5.56
+      "return_5d": -10.51,
+      "return_20d": -13.62,
+      "rsi": 26.63,
+      "ma200": 683.06,
+      "ma200_dev": -10.92
     },
     "vxn": {
       "ticker": "^VXN",
-      "value": 36.48,
-      "daily_return": 10.14,
-      "as_of": "2026-11-19",
+      "value": 45.25,
+      "daily_return": 24.04,
+      "as_of": "2026-11-20",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": 3.36,
-      "percentile": 99.1,
+      "daily_change": 8.77,
+      "percentile": 100.0,
       "percentile_window": "756 个交易日"
     },
     "us10y": {
       "ticker": "^TNX",
-      "value": 5.05,
-      "daily_return": -0.28,
-      "as_of": "2026-11-19",
+      "value": 4.91,
+      "daily_return": -2.77,
+      "as_of": "2026-11-20",
       "source": "Yahoo Finance",
       "freshness_status": "fresh",
       "error": null,
-      "daily_change": -0.014,
+      "daily_change": -0.14,
       "unit": "%"
     }
   },
@@ -64,7 +64,7 @@
       "value": 20.1,
       "percentile": 37.5,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
@@ -74,15 +74,15 @@
       "value": 30.8,
       "percentile": 96.7,
       "as_of": "2026-08-17",
-      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
+      "source": "ChartRow Nasdaq-100 P/E (automatic); percentile 配置回退（历史 N=7<30，2026-07-27)（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）（回退）",
       "freshness_status": "stale",
       "percentile_window": "配置回退（历史 N=7<30，2026-07-27)",
       "percentile_as_of": "2026-07-27",
       "error": "ValueError: ChartRow PE values not found"
     },
     "cnn_fear_greed": {
-      "value": 18.6761904761905,
-      "as_of": "2026-11-19",
+      "value": 9.67368421052632,
+      "as_of": "2026-11-20",
       "rating": "extreme fear",
       "source": "CNN Fear & Greed public API",
       "freshness_status": "fresh",
@@ -90,37 +90,39 @@
     },
     "naaim": {
       "value": 94.49,
-      "as_of": "2026-11-20",
+      "as_of": "2026-11-21",
       "source": "NAAIM official embeddable number (retrieved)",
       "freshness_status": "fresh",
       "error": null
     },
     "us10y_score": {
-      "value": 20.0,
-      "as_of": "2026-11-19",
-      "source": "^TNX 自动评分（当前 5.05%）",
+      "value": 35.0,
+      "as_of": "2026-11-20",
+      "source": "^TNX 自动评分（当前 4.91%）",
       "freshness_status": "fresh",
       "error": null
     }
   },
   "model": {
-    "score": 57.3,
+    "score": 59.8,
     "state": "正常",
     "multiplier": 1.0,
     "tone": "normal",
     "dimensions": {
       "valuation": 40.3,
-      "sentiment": 92.0,
-      "trend": 83.0,
+      "sentiment": 96.1,
+      "trend": 86.7,
       "positioning": 5.5,
-      "macro": 20.0
+      "macro": 35.0
     },
     "ma200_score": 100.0,
     "missing_dimensions": []
   },
   "summary": "大盘今日相对更强；市场处于正常区间，模型参考定投倍率为 1x。",
   "alerts": [
-    "恐慌指数升至 36.5"
+    "恐慌指数升至 45.2",
+    "纳指100单日下跌 5.61%",
+    "标普500单日下跌 3.70%"
   ],
   "fetch_failures": [
     "PE: ValueError: ChartRow PE values not found"
